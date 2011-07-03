@@ -5,6 +5,33 @@
 # A shell script to poll the Sonospy backend to get various track info.
 ##########################################################################
 
+# CHECK FOR ARGUMENTS (NEEDS 2)
+if [ $# -ne 2 ]
+	then
+		echo ""
+		echo "A shell script to poll the sonospy backend to retrieve"
+		echo "now-playing information as well as some status on the "
+		echo "zone player status itself."
+		echo ""
+		echo "Please use at least the following arguments:"
+		echo ""
+		echo "arg1: zone player to poll (kitchen, living%20room"
+		echo "--------- note the %20 if there is a space in your ZP"
+		echo "--------- name. I'll fix that later."
+		echo ""
+		echo "arg2: can be one of the following:"
+		echo "track, album, artist, type, class, position, percent"
+		echo "volume, volume_fixed, mute, state, art"
+		echo ""
+		echo "note: volume, volume fixed, mute and state all seem"
+		echo "to belong to the zone player itself."
+		echo ""
+		echo "Optionally, you can indicate a third argument: lower"
+		echo "to output in lowercase."
+		echo ""
+		exit 1
+fi
+
 zonePlayer=$1
 # Get the IP address of the system
 ipaddy=$(hostname -I)
