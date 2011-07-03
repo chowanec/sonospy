@@ -33,7 +33,7 @@ if [ $# -ne 4 ]
 		echo ""
 		echo "This would scan a source database of sonos.sqlite, create a subset of that"
 		echo "database called last90days.db for files added to sonos.sqlite in the last"
-		ecjp "90 days."
+		echo "90 days."
 		echo ""		
 		exit 1
 fi
