@@ -7,6 +7,7 @@
 #      - Write extract function based on criteria
 #      - Enable Verbose, overwrite and log
 #      - Mulithread
+#      - Tons and tons of error checking
 ###############################################################################
 
 import wx
@@ -219,19 +220,6 @@ class ExtractPanel(wx.Panel):
         sizer.AddGrowableCol(2)
         panel.SetSizer(sizer)
 
-    def bt_ScanRepairClick(self, event):
-        ## DEBUG
-        self.tc_MainDatabase.Value = "test.db"
-
-        if self.tc_MainDatabase.Value == "":
-            self.LogWindow.Value += "ERROR:\tNo database name selected!\n"
-        else:
-            scanCMD = "./scan -d " + self.tc_MainDatabase.Value + " -r"
-            self.LogWindow.Value += "Running Repair on " + self.tc_MainDatabase.Value + "...\n\n"
-            proc = subprocess.Popen([scanCMD],shell=True,stdout=subprocess.PIPE)
-            for line in proc.communicate()[0]:
-                self.LogWindow.AppendText(line)
-
     def bt_MainDatabaseClick(self, event):
         # Create a list of filters
         filters = 'Text files (*.db)|*.db|All files (*.*)|*.*'
@@ -263,26 +251,24 @@ class ExtractPanel(wx.Panel):
 
         ## DEBUG
         self.tc_MainDatabase.Value = "test.db"
+        self.tc_TargetDatabase.Value = "test2.db"
 
         if self.tc_MainDatabase.Value == "":
-            self.LogWindow.Value += "ERROR:\tNo database name selected!\n"
+            self.LogWindow.Value += "ERROR:\tNo source database name selected!\n"
+        elif self.tc_TargetDatabase.Value == "":
+            self.LogWindow.Value += "ERROR:\tNo target database name selected.\n"
+        elif self.tc_MainDatabase.Value == self.tc_TargetDatabase.Value:
+            self.LogWindow.Value += "ERROR:\tSource database and target database cannot be the same database!\n"
         else:
-            scanCMD = "./scan -d " + self.tc_MainDatabase.Value + " "
-
-            numLines=0
-            maxLines=(int(self.multiText.GetNumberOfLines()))
-
-            if self.multiText.GetLineText(numLines) == "":
-                self.LogWindow.Value += "ERROR\tNo folder selected to scan!\n"
-            else:
-                self.LogWindow.Value += "Running Scan...\n\n"
-                while (numLines < maxLines):
-                    scanCMD += str(self.multiText.GetLineText(numLines)) + " "
-                    numLines += 1
+            # 13-July -- I left off here.
+            searchCMD = ""
+            scanCMD = "./scan -d " + self.tc_MainDatabase.Value + " -x " + self.tc_TargetDatabase.Value + " -w " + searchCMD
+            print scanCMD
+            self.LogWindow.Value += "Running Scan...\n\n"
 
                 # DEBUG
                 #self.LogWindow.Value += scanCMD
 
-                proc = subprocess.Popen([scanCMD],shell=True,stdout=subprocess.PIPE)
-                for line in proc.communicate()[0]:
-                    self.LogWindow.AppendText(line)
+#                proc = subprocess.Popen([scanCMD],shell=True,stdout=subprocess.PIPE)
+#                for line in proc.communicate()[0]:
+ #                   self.LogWindow.AppendText(line)
