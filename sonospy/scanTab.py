@@ -6,8 +6,7 @@
 # TODO:
 #      - Get multithreading to work somehow, so I can process the STDOUT to
 #        LogWindow in realtime.
-#      - Hook up Log and Verbose checkboxes to repair and scan.update
-#      - Check multiple paths to scan into one database.
+#      - Cosmetic work -- grey out log until it is activated, etc.
 ###############################################################################
 
 import wx
@@ -72,10 +71,11 @@ class ScanPanel(wx.Panel):
         bt_ScanRepair = wx.Button(panel, label="Repair")
         bt_ScanRepair.Bind(wx.EVT_BUTTON, self.bt_ScanRepairClick, bt_ScanRepair)
         self.ck_ScanVerbose = wx.CheckBox(panel, label="Verbose")
-        self.ck_ScanLog = wx.CheckBox(panel, label="Log")
+        bt_SaveLog = wx.Button(panel, label="Save to Log")
+        bt_SaveLog.Bind(wx.EVT_BUTTON, self.bt_SaveLogClick, bt_SaveLog)
         sizer.Add(bt_ScanUpdate, pos=(4,0), span=(1,2), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.ck_ScanVerbose, pos=(4,2), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(self.ck_ScanLog, pos=(4,4), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(bt_SaveLog, pos=(4,4), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=5)
         sizer.Add(bt_ScanRepair, pos=(4,5), span=(1,2), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
     # --------------------------------------------------------------------------
     # [5] Separator line ------------------------------------------------------
@@ -83,12 +83,13 @@ class ScanPanel(wx.Panel):
         sizer.Add(hl_SepLine2, pos=(5, 0), span=(1, 6), flag=wx.EXPAND, border=10)
     # --------------------------------------------------------------------------
     # [6] Output/Log Box -------------------------------------------------------
-        self.LogWindow = wx.TextCtrl(panel, -1,"",size=(100, 100), style=wx.TE_MULTILINE|wx.TE_READONLY)
+        self.LogWindow = wx.TextCtrl(panel, -1,"",size=(100, 300), style=wx.TE_MULTILINE|wx.TE_READONLY)
         self.LogWindow.SetInsertionPoint(0)
         sizer.Add(self.LogWindow, pos=(6,0), span=(1,6), flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
 
     # DEBUG
-        self.multiText.Value = "~/Network/Music/Weezer"
+        self.multiText.Value = "~/Network/Music/Weezer\n"
+        self.multiText.Value += "~/Network/Music/Yuck"
 
         sizer.AddGrowableCol(2)
         panel.SetSizer(sizer)
@@ -100,7 +101,11 @@ class ScanPanel(wx.Panel):
         if self.tc_MainDatabase.Value == "":
             self.LogWindow.Value += "ERROR:\tNo database name selected!\n"
         else:
-            scanCMD = "./scan -d " + self.tc_MainDatabase.Value + " -r"
+            if self.ck_ScanVerbose.Value == True:
+                getOpts = "-v "
+
+            scanCMD = "./scan " + getOpts +"-d " + self.tc_MainDatabase.Value + " -r"
+
             self.LogWindow.Value += "Running Repair on " + self.tc_MainDatabase.Value + "...\n\n"
             proc = subprocess.Popen([scanCMD],shell=True,stdout=subprocess.PIPE)
             for line in proc.communicate()[0]:
@@ -129,6 +134,14 @@ class ScanPanel(wx.Panel):
     def bt_FoldersToScanClearClick(self, event):
         self.multiText.Value = ""
 
+    def bt_SaveLogClick(self, event):
+        dialog = wx.FileDialog(self, message='Choose a file', style=wx.SAVE|wx.OVERWRITE_PROMPT)
+        if dialog.ShowModal() == wx.ID_OK:
+            savefile = dialog.GetFilename()
+            saveMe = open(savefile, 'w')#open the file (self.filename) to store our saved data
+            saveMe.write(self.LogWindow.Value)#get our text from the textctrl, and write it out to the file we just opened.
+            saveMe.close()#and then close the file.
+        
     def bt_ScanUpdateClick(self, event):
 
         ## DEBUG
@@ -137,7 +150,12 @@ class ScanPanel(wx.Panel):
         if self.tc_MainDatabase.Value == "":
             self.LogWindow.Value += "ERROR:\tNo database name selected!\n"
         else:
-            scanCMD = "./scan -d " + self.tc_MainDatabase.Value + " "
+            getOpts = ""
+
+            if self.ck_ScanVerbose.Value == True:
+                getOpts = "-v "
+
+            scanCMD = "./scan " + getOpts +"-d " + self.tc_MainDatabase.Value + " "
 
             numLines=0
             maxLines=(int(self.multiText.GetNumberOfLines()))
@@ -151,7 +169,7 @@ class ScanPanel(wx.Panel):
                     numLines += 1
 
                 # DEBUG
-                #self.LogWindow.Value += scanCMD
+                # self.LogWindow.Value += scanCMD
 
                 proc = subprocess.Popen([scanCMD],shell=True,stdout=subprocess.PIPE)
                 for line in proc.communicate()[0]:

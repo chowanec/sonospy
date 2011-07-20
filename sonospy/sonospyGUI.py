@@ -19,8 +19,8 @@ class SonospyNotebook(wx.Notebook):
         tabThree = launchTab.ExtractPanel(self)
 
         # UNCOMMENT THIS TO GET BACK TO NORMAL!
-        self.AddPage(tabOne, "Scan")
-        self.AddPage(tabThree, "Launch")
+#        self.AddPage(tabOne, "Scan")
+#        self.AddPage(tabThree, "Launch")
         self.AddPage(tabTwo, "Extract")
 
         self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnPageChanged)

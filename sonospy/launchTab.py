@@ -20,9 +20,9 @@ import os
 import subprocess
 import re
 
-class ExtractPanel(wx.Panel):
+class LaunchPanel(wx.Panel):
     """
-    Scan Tab for running Sonospy Database Scans, Updates and Repairs
+    Launch Tab for finding and launching .db files
     """
     #----------------------------------------------------------------------
     def __init__(self, parent):
@@ -60,13 +60,16 @@ class ExtractPanel(wx.Panel):
     	# textCtrl (for Proxy name in controller)
     	# database name (based on *.db)
 	for db in numDB:
-		check = wx.CheckBox(self, -1, db)
-		sizer.Add(check, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
-	        label = wx.StaticText(panel, label="")
-		sizer.Add(label, pos=(xIndex,1), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
-		name = wx.TextCtrl(panel)
-		sizer.Add(name, pos=(xIndex,2), span=(1,3),flag=wx.EXPAND|wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=5)
-		xIndex +=1
+            check = wx.CheckBox(self, -1, db)
+            sizer.Add(check, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+            label = wx.StaticText(panel, label="")
+            sizer.Add(label, pos=(xIndex,1), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+            name = wx.TextCtrl(panel)
+            #Set Temp Name
+            if db.endswith('.db'):
+                name.Value = db[:-3]
+            sizer.Add(name, pos=(xIndex,2), span=(1,3),flag=wx.EXPAND|wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=5)
+            xIndex +=1
 	#-------------------------------------------------------
 
 

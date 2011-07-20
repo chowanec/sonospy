@@ -4,10 +4,11 @@
 # Copyright, blah, blah
 ###############################################################################
 # TODO:
-#      - Write extract function based on criteria
-#      - Enable Verbose, overwrite and log
 #      - Mulithread
-#      - Tons and tons of error checking
+#      - Tons and tons of error checking (check for int on relevant fields)
+#      - Idiot proof overwrite so you can't rm -I /, etc.
+#      - Write the AND SQL language for multiple selections.
+#      - Fix the overruns with the ck_overwrite button
 ###############################################################################
 
 import wx
@@ -76,14 +77,14 @@ class ExtractPanel(wx.Panel):
 
         # Created
         label_OptionsCreated = wx.StaticText(panel, label="Created:")
-        combo_LogicalCreated = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
-        combo_LogicalCreated.Select(1)
+        self.combo_LogicalCreated = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
+        self.combo_LogicalCreated.Select(1)
         self.tc_DaysAgoCreated = wx.TextCtrl(panel)
         label_DaysAgoCreated = wx.StaticText(panel, label="days ago")
         # Add them to the sizer (optionBoxSizer)
         OptionBoxSizer.Add(label_OptionsCreated, pos=(sizerIndexX, 0), flag=wx.ALL|
             wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=0)
-        OptionBoxSizer.Add(combo_LogicalCreated, pos=(sizerIndexX,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=1)
+        OptionBoxSizer.Add(self.combo_LogicalCreated, pos=(sizerIndexX,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=1)
         OptionBoxSizer.Add(self.tc_DaysAgoCreated, pos=(sizerIndexX, 2), flag=wx.ALL|
             wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT, border=0)
         OptionBoxSizer.Add(label_DaysAgoCreated, pos=(sizerIndexX,3), flag=wx.ALL|
@@ -92,14 +93,14 @@ class ExtractPanel(wx.Panel):
         # Inserted
         sizerIndexX += 1
         label_OptionsInserted = wx.StaticText(panel, label="Inserted:")
-        combo_LogicalInserted = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
-        combo_LogicalInserted.Select(1)
+        self.combo_LogicalInserted = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
+        self.combo_LogicalInserted.Select(1)
         self.tc_DaysAgoInserted = wx.TextCtrl(panel)
         label_DaysAgoInserted = wx.StaticText(panel, label="days ago")
         # Add them to the sizer (optionBoxSizer)
         OptionBoxSizer.Add(label_OptionsInserted, pos=(sizerIndexX, 0), flag=wx.ALL|
             wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=0)
-        OptionBoxSizer.Add(combo_LogicalInserted, pos=(sizerIndexX,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=1)
+        OptionBoxSizer.Add(self.combo_LogicalInserted, pos=(sizerIndexX,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=1)
         OptionBoxSizer.Add(self.tc_DaysAgoInserted, pos=(sizerIndexX, 2), flag=wx.ALL|
             wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT, border=0)
         OptionBoxSizer.Add(label_DaysAgoInserted, pos=(sizerIndexX,3), flag=wx.ALL|
@@ -108,45 +109,45 @@ class ExtractPanel(wx.Panel):
         # Modified
         sizerIndexX += 1
         label_OptionsModified = wx.StaticText(panel, label="Modified:")
-        combo_LogicalModified = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
-        combo_LogicalModified.Select(1)
+        self.combo_LogicalModified = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
+        self.combo_LogicalModified.Select(1)
         self.tc_DaysAgoModified = wx.TextCtrl(panel)
         label_DaysAgoModified = wx.StaticText(panel, label="days ago")
         # Add them to the sizer (optionBoxSizer)
         OptionBoxSizer.Add(label_OptionsModified, pos=(sizerIndexX, 0), flag=wx.ALL|
             wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=0)
-        OptionBoxSizer.Add(combo_LogicalModified, pos=(sizerIndexX,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=1)
+        OptionBoxSizer.Add(self.combo_LogicalModified, pos=(sizerIndexX,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=1)
         OptionBoxSizer.Add(self.tc_DaysAgoModified, pos=(sizerIndexX, 2), flag=wx.ALL|
             wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT, border=0)
         OptionBoxSizer.Add(label_DaysAgoModified, pos=(sizerIndexX,3), flag=wx.ALL|
             wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT, border=0)
 
-        # Scanned
+        # Accessed
         sizerIndexX += 1
-        label_OptionsScanned = wx.StaticText(panel, label="Scanned:")
-        combo_LogicalScanned = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
-        combo_LogicalScanned.Select(1)
-        self.tc_DaysAgoScanned = wx.TextCtrl(panel)
-        label_DaysAgoScanned = wx.StaticText(panel, label="days ago")
+        label_OptionsAccessed = wx.StaticText(panel, label="Accessed:")
+        self.combo_LogicalAccessed = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
+        self.combo_LogicalAccessed.Select(1)
+        self.tc_DaysAgoAccessed = wx.TextCtrl(panel)
+        label_DaysAgoAccessed = wx.StaticText(panel, label="days ago")
         # Add them to the sizer (optionBoxSizer)
-        OptionBoxSizer.Add(label_OptionsScanned, pos=(sizerIndexX, 0), flag=wx.ALL|
+        OptionBoxSizer.Add(label_OptionsAccessed, pos=(sizerIndexX, 0), flag=wx.ALL|
             wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=0)
-        OptionBoxSizer.Add(combo_LogicalScanned, pos=(sizerIndexX,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=1)
-        OptionBoxSizer.Add(self.tc_DaysAgoScanned, pos=(sizerIndexX, 2), flag=wx.ALL|
+        OptionBoxSizer.Add(self.combo_LogicalAccessed, pos=(sizerIndexX,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=1)
+        OptionBoxSizer.Add(self.tc_DaysAgoAccessed, pos=(sizerIndexX, 2), flag=wx.ALL|
             wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT, border=0)
-        OptionBoxSizer.Add(label_DaysAgoScanned, pos=(sizerIndexX,3), flag=wx.ALL|
+        OptionBoxSizer.Add(label_DaysAgoAccessed, pos=(sizerIndexX,3), flag=wx.ALL|
             wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT, border=0)
 
         # Year
         sizerIndexX += 1
         label_OptionsYear = wx.StaticText(panel, label="Year Recorded:")
-        combo_LogicalYear = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
-        combo_LogicalYear.Select(1)
+        self.combo_LogicalYear = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
+        self.combo_LogicalYear.Select(1)
         self.tc_Year = wx.TextCtrl(panel)
         # Add them to the sizer (optionBoxSizer)
         OptionBoxSizer.Add(label_OptionsYear, pos=(sizerIndexX, 0), flag=wx.ALL|
             wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=0)
-        OptionBoxSizer.Add(combo_LogicalYear, pos=(sizerIndexX,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=1)
+        OptionBoxSizer.Add(self.combo_LogicalYear, pos=(sizerIndexX,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=1)
         OptionBoxSizer.Add(self.tc_Year, pos=(sizerIndexX, 2), flag=wx.ALL|
             wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT, border=0)
 
@@ -180,14 +181,14 @@ class ExtractPanel(wx.Panel):
         # Bit-rate
         sizerIndexX += 1
         label_OptionsBitrate = wx.StaticText(panel, label="Bitrate:")
-        combo_LogicalBitrate = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
-        combo_LogicalBitrate.Select(1)
+        self.combo_LogicalBitrate = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
+        self.combo_LogicalBitrate.Select(1)
         self.tc_Bitrate = wx.TextCtrl(panel)
 
         # Add them to the sizer (optionBoxSizer)
         OptionBoxSizer.Add(label_OptionsBitrate, pos=(sizerIndexX, 0), flag=wx.ALL|
             wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=0)
-        OptionBoxSizer.Add(combo_LogicalBitrate, pos=(sizerIndexX,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=1)
+        OptionBoxSizer.Add(self.combo_LogicalBitrate, pos=(sizerIndexX,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=1)
         OptionBoxSizer.Add(self.tc_Bitrate, pos=(sizerIndexX, 2), flag=wx.ALL|
             wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT, border=0)
 
@@ -200,13 +201,15 @@ class ExtractPanel(wx.Panel):
         bt_Extract = wx.Button(panel, label="Extract")
         bt_Extract.Bind(wx.EVT_BUTTON, self.bt_ExtractClick, bt_Extract)
         self.ck_ExtractVerbose = wx.CheckBox(panel, label="Verbose")
-        self.ck_ExtractLog = wx.CheckBox(panel, label="Log")
+        bt_SaveLog = wx.Button(panel, label="Save to Log")
+        bt_SaveLog.Bind(wx.EVT_BUTTON, self.bt_SaveLogClick, bt_SaveLog)
         self.ck_OverwriteExisting = wx.CheckBox(panel, label="Overwrite")
 
         sizer.Add(bt_Extract, pos=(3,0), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(self.ck_ExtractVerbose, pos=(3,1), flag=wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(self.ck_OverwriteExisting, pos=(3,2), flag=wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(self.ck_ExtractLog, pos=(3,3), flag=wx.ALIGN_CENTER_VERTICAL, border=0)
+        sizer.Add(self.ck_ExtractVerbose, pos=(3,2), flag=wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.ck_OverwriteExisting, pos=(3,3), flag=wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(bt_SaveLog, pos=(3,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.RIGHT, border=10)
+
     # --------------------------------------------------------------------------
     # [4] Separator line ------------------------------------------------------
         hl_SepLine2 = wx.StaticLine(panel, 0, (250, 50), (300,1))
@@ -245,7 +248,6 @@ class ExtractPanel(wx.Panel):
             for selection in selected:
                 self.tc_TargetDatabase.Value = selection
         dialog.Destroy()
-
     
     def bt_ExtractClick(self, event):
 
@@ -260,15 +262,99 @@ class ExtractPanel(wx.Panel):
         elif self.tc_MainDatabase.Value == self.tc_TargetDatabase.Value:
             self.LogWindow.Value += "ERROR:\tSource database and target database cannot be the same database!\n"
         else:
-            # 13-July -- I left off here.
             searchCMD = ""
-            scanCMD = "./scan -d " + self.tc_MainDatabase.Value + " -x " + self.tc_TargetDatabase.Value + " -w " + searchCMD
-            print scanCMD
-            self.LogWindow.Value += "Running Scan...\n\n"
+            # Scrub the fields to see what our extract command should be.
+            # Eventually stack these with some sort of AND query.
+
+            if self.tc_DaysAgoCreated.Value != "":
+                if searchCMD != "":
+                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
+                    return(1)
+                else:
+                    searchCMD = "\"where (julianday(datetime(\'now\')) - julianday(datetime(created, \'unixepoch\'))) " + self.combo_LogicalCreated.Value + " " + self.tc_DaysAgoCreated.Value + "\""
+
+            if self.tc_DaysAgoInserted.Value != "":
+                if searchCMD != "":
+                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
+                    return(1)
+                else:
+                    searchCMD = "\"where (julianday(datetime(\'now\')) - julianday(datetime(inserted, \'unixepoch\'))) " + self.combo_LogicalInserted.Value + " " + self.tc_DaysAgoInserted.Value + "\""
+
+            if self.tc_DaysAgoModified.Value != "":
+                if searchCMD != "":
+                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
+                    return(1)
+                else:
+                    searchCMD = "\"where (julianday(datetime(\'now\')) - julianday(datetime(lastmodified, \'unixepoch\'))) " + self.combo_LogicalModified.Value + " " + self.tc_DaysAgoModified.Value + "\""
+
+            if self.tc_DaysAgoAccessed.Value != "":
+                if searchCMD != "":
+                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
+                    return(1)
+                else:
+                    searchCMD = "\"where (julianday(datetime(\'now\')) - julianday(datetime(lastaccessed, \'unixepoch\'))) " + self.combo_LogicalAccessed.Value + " " + self.tc_DaysAgoAccessed.Value + "\""
+
+            if self.tc_Year.Value != "":
+                if searchCMD != "":
+                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
+                    return(1)
+                else:
+                    searchCMD = "\"where year " + self.combo_LogicalYear.Value + " " + self.tc_Year.Value + "\""
+
+            if self.tc_Genre.Value != "":
+                if searchCMD != "":
+                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
+                    return(1)
+                else:
+                    if len(self.tc_Genre.Value.split()) > 1:
+                        searchCMD = "\"where genre=\'" + self.tc_Genre.Value + "\'\""
+                    else:
+                        searchCMD = "\"where genre=" + self.tc_Genre.Value + "\""
+
+            if self.tc_Artist.Value != "":
+                if searchCMD != "":
+                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
+                    return(1)
+                else:
+                    searchCMD = "\"where artist=\'" + self.tc_Artist.Value + "\'\""
+
+            if self.tc_Composer.Value != "":
+                if searchCMD != "":
+                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
+                    return(1)
+                else:
+                    searchCMD = "\"where composer=\'" + self.tc_Composer.Value + "\'\""
+
+            if self.tc_Bitrate.Value != "":
+                if searchCMD != "":
+                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
+                    return(1)
+                else:
+                    searchCMD = "\"where bitrate " + self.combo_LogicalBitrate.Value + " " + self.tc_Bitrate.Value + "\""
+
+            if searchCMD !="":
+                if self.ck_OverwriteExisting.Value == True:
+                    if os.path.exists(self.tc_TargetDatabase.Value) == True:
+                        delME = "rm -I " + self.tc_TargetDatabase.Value
+                        proc = subprocess.Popen([delME],shell=True,stdout=subprocess.PIPE)
+
+                getOpts = ""
+                if self.ck_ExtractVerbose.Value == True:
+                    getOpts = "-v "
+
+                scanCMD = "./scan " + getOpts +"-d " + self.tc_MainDatabase.Value + " -x " + self.tc_TargetDatabase.Value + " -w " + searchCMD
+                self.LogWindow.Value += "Extracting from " + self.tc_MainDatabase.Value +" into " + self.tc_TargetDatabase.Value + "...\n\n"
 
                 # DEBUG
-                #self.LogWindow.Value += scanCMD
+                self.LogWindow.Value += scanCMD
+                proc = subprocess.Popen([scanCMD],shell=True,stdout=subprocess.PIPE)
+                for line in proc.communicate()[0]:
+                    self.LogWindow.AppendText(line)
 
-#                proc = subprocess.Popen([scanCMD],shell=True,stdout=subprocess.PIPE)
-#                for line in proc.communicate()[0]:
- #                   self.LogWindow.AppendText(line)
+    def bt_SaveLogClick(self, event):
+        dialog = wx.FileDialog(self, message='Choose a file', style=wx.SAVE|wx.OVERWRITE_PROMPT)
+        if dialog.ShowModal() == wx.ID_OK:
+            savefile = dialog.GetFilename()
+            saveMe = open(savefile, 'w')#open the file (self.filename) to store our saved data
+            saveMe.write(self.LogWindow.Value)#get our text from the textctrl, and write it out to the file we just opened.
+            saveMe.close()#and then close the file.
