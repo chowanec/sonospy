@@ -1,3 +1,11 @@
+###############################################################################
+# GUI for Mark Henkelis's awesome Sonospy Project.
+###############################################################################
+# Copyright, blah, blah
+###############################################################################
+# TODO lists are stored in individual files in the second import line below.
+###############################################################################
+
 import wx
 import scanTab, extractTab, launchTab
 from wxPython.wx import *
@@ -16,7 +24,7 @@ class SonospyNotebook(wx.Notebook):
         # Create the first tab and add it to the notebook
         tabOne = scanTab.ScanPanel(self)
         tabTwo = extractTab.ExtractPanel(self)
-        tabThree = launchTab.ExtractPanel(self)
+        tabThree = launchTab.LaunchPanel(self)
 
         # UNCOMMENT THIS TO GET BACK TO NORMAL!
 #        self.AddPage(tabOne, "Scan")
@@ -53,7 +61,7 @@ class SonospyFrame(wx.Frame):
         """Constructor"""
         wx.Frame.__init__(self, None, wx.ID_ANY,
                           "Sonospy",
-                          size=(490,610)
+                          size=(520,610)
                           )
         panel = wx.Panel(self)
 

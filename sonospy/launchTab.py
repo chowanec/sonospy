@@ -20,6 +20,8 @@ import os
 import subprocess
 import re
 
+list_checkbox = []
+
 class LaunchPanel(wx.Panel):
     """
     Launch Tab for finding and launching .db files
@@ -54,9 +56,12 @@ class LaunchPanel(wx.Panel):
 	# [2] Generate DB list and increment sizer Index
 
 	# Get a count of *.db from the filesystem
+    # HELP HERE: http://stackoverflow.com/questions/6757746/dynamically-populating-widgets-how-to-then-access-them
+        list_checkbox = []
+        list_textctrl = []
         numDB = scrubDB(os.getcwd())
 
-    	# Checkbox (enable, disable for launch)
+        # Checkbox (enable, disable for launch)
     	# textCtrl (for Proxy name in controller)
     	# database name (based on *.db)
 	for db in numDB:
@@ -71,11 +76,26 @@ class LaunchPanel(wx.Panel):
             sizer.Add(name, pos=(xIndex,2), span=(1,3),flag=wx.EXPAND|wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=5)
             xIndex +=1
 	#-------------------------------------------------------
+    # Save references to the widgets created dynamically
+            list_checkbox += check
+            list_textctrl += name
+
+            #Bind whatever events you want here -
+            check.Bind(wx.EVT_CHECKBOX, OnCheck, check)
 
 
         sizer.AddGrowableCol(2)
         panel.SetSizer(sizer)
 
+def OnCheck(*args):
+    if args[0].IsChecked():                         # args[0] holds the reference to the widget which has triggered this event.
+        id = list_checkbox.index(args[0])
+        adj_textctrl = list_textctrl[id]          # this is your textctrl next to your checkbox
+
+        # do whatever you want to do
+        print id
+        print adj_textctrl
+        
 def scrubDB(path):
     asps = []
     for root, dirs, files in os.walk(os.getcwd()):

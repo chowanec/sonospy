@@ -14,6 +14,8 @@ from wxPython.wx import *
 import os
 import subprocess
 
+scanCMD = ""
+
 class ScanPanel(wx.Panel):
     """
     Scan Tab for running Sonospy Database Scans, Updates and Repairs
@@ -141,7 +143,7 @@ class ScanPanel(wx.Panel):
             saveMe = open(savefile, 'w')#open the file (self.filename) to store our saved data
             saveMe.write(self.LogWindow.Value)#get our text from the textctrl, and write it out to the file we just opened.
             saveMe.close()#and then close the file.
-        
+
     def bt_ScanUpdateClick(self, event):
 
         ## DEBUG

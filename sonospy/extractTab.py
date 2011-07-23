@@ -6,9 +6,6 @@
 # TODO:
 #      - Mulithread
 #      - Tons and tons of error checking (check for int on relevant fields)
-#      - Idiot proof overwrite so you can't rm -I /, etc.
-#      - Write the AND SQL language for multiple selections.
-#      - Fix the overruns with the ck_overwrite button
 ###############################################################################
 
 import wx
@@ -18,7 +15,7 @@ import subprocess
 
 class ExtractPanel(wx.Panel):
     """
-    Scan Tab for running Sonospy Database Scans, Updates and Repairs
+    Extract Tab for creating subset databases.
     """
     #----------------------------------------------------------------------
     def __init__(self, parent):
@@ -252,8 +249,8 @@ class ExtractPanel(wx.Panel):
     def bt_ExtractClick(self, event):
 
         ## DEBUG
-        self.tc_MainDatabase.Value = "test.db"
-        self.tc_TargetDatabase.Value = "test2.db"
+#        self.tc_MainDatabase.Value = "test.db"
+#        self.tc_TargetDatabase.Value = "test2.db"
 
         if self.tc_MainDatabase.Value == "":
             self.LogWindow.Value += "ERROR:\tNo source database name selected!\n"
@@ -267,76 +264,72 @@ class ExtractPanel(wx.Panel):
             # Eventually stack these with some sort of AND query.
 
             if self.tc_DaysAgoCreated.Value != "":
-                if searchCMD != "":
-                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
-                    return(1)
+                if searchCMD == "":
+                    searchCMD = "where (julianday(datetime(\'now\')) - julianday(datetime(created, \'unixepoch\'))) " + self.combo_LogicalCreated.Value + " " + self.tc_DaysAgoCreated.Value
                 else:
-                    searchCMD = "\"where (julianday(datetime(\'now\')) - julianday(datetime(created, \'unixepoch\'))) " + self.combo_LogicalCreated.Value + " " + self.tc_DaysAgoCreated.Value + "\""
+                    searchCMD += " AND where (julianday(datetime(\'now\')) - julianday(datetime(created, \'unixepoch\'))) " + self.combo_LogicalCreated.Value + " " + self.tc_DaysAgoCreated.Value
 
             if self.tc_DaysAgoInserted.Value != "":
-                if searchCMD != "":
-                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
-                    return(1)
+                if searchCMD == "":
+                    searchCMD = "where (julianday(datetime(\'now\')) - julianday(datetime(inserted, \'unixepoch\'))) " + self.combo_LogicalInserted.Value + " " + self.tc_DaysAgoInserted.Value
                 else:
-                    searchCMD = "\"where (julianday(datetime(\'now\')) - julianday(datetime(inserted, \'unixepoch\'))) " + self.combo_LogicalInserted.Value + " " + self.tc_DaysAgoInserted.Value + "\""
+                    searchCMD += " AND where (julianday(datetime(\'now\')) - julianday(datetime(inserted, \'unixepoch\'))) " + self.combo_LogicalInserted.Value + " " + self.tc_DaysAgoInserted.Value
 
             if self.tc_DaysAgoModified.Value != "":
-                if searchCMD != "":
-                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
-                    return(1)
+                if searchCMD == "":
+                    searchCMD = "where (julianday(datetime(\'now\')) - julianday(datetime(lastmodified, \'unixepoch\'))) " + self.combo_LogicalModified.Value + " " + self.tc_DaysAgoModified.Value
                 else:
-                    searchCMD = "\"where (julianday(datetime(\'now\')) - julianday(datetime(lastmodified, \'unixepoch\'))) " + self.combo_LogicalModified.Value + " " + self.tc_DaysAgoModified.Value + "\""
+                    searchCMD += " AND where (julianday(datetime(\'now\')) - julianday(datetime(lastmodified, \'unixepoch\'))) " + self.combo_LogicalModified.Value + " " + self.tc_DaysAgoModified.Value
 
             if self.tc_DaysAgoAccessed.Value != "":
-                if searchCMD != "":
-                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
-                    return(1)
+                if searchCMD == "":
+                    searchCMD = "where (julianday(datetime(\'now\')) - julianday(datetime(lastaccessed, \'unixepoch\'))) " + self.combo_LogicalAccessed.Value + " " + self.tc_DaysAgoAccessed.Value
                 else:
-                    searchCMD = "\"where (julianday(datetime(\'now\')) - julianday(datetime(lastaccessed, \'unixepoch\'))) " + self.combo_LogicalAccessed.Value + " " + self.tc_DaysAgoAccessed.Value + "\""
+                    searchCMD += " AND where (julianday(datetime(\'now\')) - julianday(datetime(lastaccessed, \'unixepoch\'))) " + self.combo_LogicalAccessed.Value + " " + self.tc_DaysAgoAccessed.Value
 
             if self.tc_Year.Value != "":
-                if searchCMD != "":
-                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
-                    return(1)
+                if searchCMD == "":
+                    searchCMD = "where year " + self.combo_LogicalYear.Value + " " + self.tc_Year.Value
                 else:
-                    searchCMD = "\"where year " + self.combo_LogicalYear.Value + " " + self.tc_Year.Value + "\""
+                    searchCMD += " AND where year " + self.combo_LogicalYear.Value + " " + self.tc_Year.Value
 
             if self.tc_Genre.Value != "":
-                if searchCMD != "":
-                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
-                    return(1)
+                if searchCMD == "":
+                    searchCMD = "where genre=\'" + self.tc_Genre.Value + "\'"
                 else:
-                    if len(self.tc_Genre.Value.split()) > 1:
-                        searchCMD = "\"where genre=\'" + self.tc_Genre.Value + "\'\""
-                    else:
-                        searchCMD = "\"where genre=" + self.tc_Genre.Value + "\""
+                    searchCMD += " AND where genre=\'" + self.tc_Genre.Value + "\'"
 
             if self.tc_Artist.Value != "":
-                if searchCMD != "":
-                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
-                    return(1)
+                if searchCMD == "":
+                    searchCMD = "where artist=\'" + self.tc_Artist.Value + "\'"
                 else:
-                    searchCMD = "\"where artist=\'" + self.tc_Artist.Value + "\'\""
+                    searchCMD += " AND where artist=\'" + self.tc_Artist.Value + "\'"
 
             if self.tc_Composer.Value != "":
-                if searchCMD != "":
-                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
-                    return(1)
+                if searchCMD == "":
+                    searchCMD = " AND where composer=\'" + self.tc_Composer.Value + "\'"
                 else:
-                    searchCMD = "\"where composer=\'" + self.tc_Composer.Value + "\'\""
+                    searchCMD += " AND where composer=\'" + self.tc_Composer.Value + "\'"
 
             if self.tc_Bitrate.Value != "":
-                if searchCMD != "":
-                    self.LogWindow.Value += "ERROR:\tPlease choose only one extract criteria.\n"
-                    return(1)
+                if searchCMD == "":
+                    searchCMD = "where bitrate " + self.combo_LogicalBitrate.Value + " " + self.tc_Bitrate.Value
                 else:
-                    searchCMD = "\"where bitrate " + self.combo_LogicalBitrate.Value + " " + self.tc_Bitrate.Value + "\""
+                    searchCMD += "AND where bitrate " + self.combo_LogicalBitrate.Value + " " + self.tc_Bitrate.Value
 
             if searchCMD !="":
+                searchCMD = "\"" + searchCMD + "\""
+
                 if self.ck_OverwriteExisting.Value == True:
                     if os.path.exists(self.tc_TargetDatabase.Value) == True:
-                        delME = "rm -I " + self.tc_TargetDatabase.Value
-                        proc = subprocess.Popen([delME],shell=True,stdout=subprocess.PIPE)
+                        illegals = ["/", "~", ".", "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "+","=",","]
+                        for illegal in illegals:
+                            if illegal in self.tc_TargetDatabase.Value:
+                                self.LogWindow.Value += "\nERROR:\tInvalid target database! You cannot use " + illegal + " in the database name."
+                                return(1)
+                            else:
+                                delME = "rm -I " + self.tc_TargetDatabase.Value
+                                proc = subprocess.Popen([delME],shell=True,stdout=subprocess.PIPE)
 
                 getOpts = ""
                 if self.ck_ExtractVerbose.Value == True:
@@ -346,7 +339,8 @@ class ExtractPanel(wx.Panel):
                 self.LogWindow.Value += "Extracting from " + self.tc_MainDatabase.Value +" into " + self.tc_TargetDatabase.Value + "...\n\n"
 
                 # DEBUG
-                self.LogWindow.Value += scanCMD
+#                self.LogWindow.Value += scanCMD
+
                 proc = subprocess.Popen([scanCMD],shell=True,stdout=subprocess.PIPE)
                 for line in proc.communicate()[0]:
                     self.LogWindow.AppendText(line)
