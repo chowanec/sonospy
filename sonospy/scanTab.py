@@ -11,10 +11,9 @@
 
 import wx
 from wxPython.wx import *
-import os
+import os, sys
 import subprocess
-
-scanCMD = ""
+import thread
 
 class ScanPanel(wx.Panel):
     """
@@ -29,7 +28,7 @@ class ScanPanel(wx.Panel):
         sizer = wx.GridBagSizer(6, 5)
         self.currentDirectory = os.getcwd()
 
-	# [0] Main Database Text, Entry and Browse Button --------------------------
+    # [0] Main Database Text, Entry and Browse Button --------------------------
         label_MainDatabase = wx.StaticText(panel, label="Database:")
         sizer.Add(label_MainDatabase, pos=(0, 0), flag=wx.LEFT|
             wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=10)
@@ -45,7 +44,7 @@ class ScanPanel(wx.Panel):
             bt_MainDatabase)
     # --------------------------------------------------------------------------
     # [1] Paths to scan for new Music ------------------------------------------
-        self.sb_FoldersToScan = wx.StaticBox(panel, label="Folders to Scan:", size=(200,100))
+        self.sb_FoldersToScan = wx.StaticBox(panel, label="Folders to Scan:", size=(200, 100))
         folderBoxSizer = wx.StaticBoxSizer(self.sb_FoldersToScan, wx.VERTICAL)
         self.multiText = wx.TextCtrl(panel, -1,"",size=(300, 100), style=wx.TE_MULTILINE|wx.TE_READONLY)
         self.multiText.SetInsertionPoint(0)
@@ -89,16 +88,17 @@ class ScanPanel(wx.Panel):
         self.LogWindow.SetInsertionPoint(0)
         sizer.Add(self.LogWindow, pos=(6,0), span=(1,6), flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
 
-    # DEBUG
-        self.multiText.Value = "~/Network/Music/Weezer\n"
-        self.multiText.Value += "~/Network/Music/Yuck"
+# DEBUG
+#        self.multiText.Value = "~/Network/Music/Weezer\n"
+#        self.multiText.Value += "~/Network/Music/Yuck"
 
         sizer.AddGrowableCol(2)
         panel.SetSizer(sizer)
 
     def bt_ScanRepairClick(self, event):
-        ## DEBUG
-        self.tc_MainDatabase.Value = "test.db"
+
+# DEBUG
+#        self.tc_MainDatabase.Value = "test.db"
 
         if self.tc_MainDatabase.Value == "":
             self.LogWindow.Value += "ERROR:\tNo database name selected!\n"
@@ -109,15 +109,14 @@ class ScanPanel(wx.Panel):
             scanCMD = "./scan " + getOpts +"-d " + self.tc_MainDatabase.Value + " -r"
 
             self.LogWindow.Value += "Running Repair on " + self.tc_MainDatabase.Value + "...\n\n"
-            proc = subprocess.Popen([scanCMD],shell=True,stdout=subprocess.PIPE)
+            proc = subprocess.Popen([scanCMD],shell=True,stdout=subprocess)
             for line in proc.communicate()[0]:
                 self.LogWindow.AppendText(line)
 
     def bt_MainDatabaseClick(self, event):
         # Create a list of filters
         filters = 'Text files (*.db)|*.db|All files (*.*)|*.*'
-        dialog = wx.FileDialog ( None, message = 'Select Database File...',
-            wildcard = filters, style = wxOPEN )
+        dialog = wx.FileDialog ( None, message = 'Select Database File...', wildcard = filters, style = wxOPEN)
 
         # Open Dialog Box and get Selection
         if dialog.ShowModal() == wxID_OK:
@@ -146,8 +145,8 @@ class ScanPanel(wx.Panel):
 
     def bt_ScanUpdateClick(self, event):
 
-        ## DEBUG
-        self.tc_MainDatabase.Value = "test.db"
+# DEBUG
+#        self.tc_MainDatabase.Value = "test.db"
 
         if self.tc_MainDatabase.Value == "":
             self.LogWindow.Value += "ERROR:\tNo database name selected!\n"
@@ -170,9 +169,19 @@ class ScanPanel(wx.Panel):
                     scanCMD += str(self.multiText.GetLineText(numLines)) + " "
                     numLines += 1
 
-                # DEBUG
+# DEBUG
                 # self.LogWindow.Value += scanCMD
 
                 proc = subprocess.Popen([scanCMD],shell=True,stdout=subprocess.PIPE)
                 for line in proc.communicate()[0]:
                     self.LogWindow.AppendText(line)
+
+# MULTITHREADING SHIT I CANNOT GET TO WORK!
+
+#                thread.start_new_thread(self.longRunning, (scanCMD,))
+
+#    def longRunning(self, scanCMD):
+#        """This runs in a different thread. """
+#        proc = subprocess.Popen([scanCMD],shell=True,stdout=subprocess.PIPE)
+#        for line in proc.communicate()[0]:
+#            wx.CallAfter(self.LogWindow.AppendText(line))

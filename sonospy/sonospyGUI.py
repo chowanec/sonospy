@@ -6,14 +6,14 @@
 # TODO lists are stored in individual files in the second import line below.
 ###############################################################################
 
-import wx
+import wx, sys
 import scanTab, extractTab, launchTab
 from wxPython.wx import *
 
 ########################################################################
 class SonospyNotebook(wx.Notebook):
     """
-    Notebook class
+    The core layout for the app -- notebook pages are slotted here
     """
 
     #----------------------------------------------------------------------
@@ -27,28 +27,9 @@ class SonospyNotebook(wx.Notebook):
         tabThree = launchTab.LaunchPanel(self)
 
         # UNCOMMENT THIS TO GET BACK TO NORMAL!
-#        self.AddPage(tabOne, "Scan")
-#        self.AddPage(tabThree, "Launch")
+        self.AddPage(tabOne, "Scan")
+        self.AddPage(tabThree, "Launch")
         self.AddPage(tabTwo, "Extract")
-
-        self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnPageChanged)
-        self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGING, self.OnPageChanging)
-
-        
-    def OnPageChanged(self, event):
-        old = event.GetOldSelection()
-        new = event.GetSelection()
-        sel = self.GetSelection()
-        print 'OnPageChanged,  old:%d, new:%d, sel:%d\n' % (old, new, sel)
-        event.Skip()
-
-    def OnPageChanging(self, event):
-        old = event.GetOldSelection()
-        new = event.GetSelection()
-        sel = self.GetSelection()
-        print 'OnPageChanging, old:%d, new:%d, sel:%d\n' % (old, new, sel)
-        event.Skip()
-
 
 ########################################################################
 class SonospyFrame(wx.Frame):
@@ -59,10 +40,7 @@ class SonospyFrame(wx.Frame):
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
-        wx.Frame.__init__(self, None, wx.ID_ANY,
-                          "Sonospy",
-                          size=(520,610)
-                          )
+        wx.Frame.__init__(self, None, wx.ID_ANY, "Sonospy", size=(520,610))
         panel = wx.Panel(self)
 
         notebook = SonospyNotebook(panel)

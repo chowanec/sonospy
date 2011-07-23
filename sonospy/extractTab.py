@@ -26,7 +26,7 @@ class ExtractPanel(wx.Panel):
         sizer = wx.GridBagSizer(6, 5)
         self.currentDirectory = os.getcwd()
 
-	# [0] Main Database Text, Entry and Browse Button --------------------------
+    # [0] Main Database Text, Entry and Browse Button --------------------------
         label_MainDatabase = wx.StaticText(panel, label="Source Database:")
         sizer.Add(label_MainDatabase, pos=(0, 0), flag=wx.LEFT|
             wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=10)
@@ -66,7 +66,7 @@ class ExtractPanel(wx.Panel):
         self.sb_ExtractOptions = wx.StaticBox(panel, label="Options for Extract", size=(100,100))
         sbs_ExtractOptions = wx.StaticBoxSizer(self.sb_ExtractOptions, wx.VERTICAL)
         OptionBoxSizer = wx.GridBagSizer(4, 9)
-        
+
         # Create the options
         logicList = ['<', '<=', '=', '>', '>=']
 
@@ -223,8 +223,7 @@ class ExtractPanel(wx.Panel):
     def bt_MainDatabaseClick(self, event):
         # Create a list of filters
         filters = 'Text files (*.db)|*.db|All files (*.*)|*.*'
-        dialog = wx.FileDialog ( None, message = 'Select Database File...',
-            wildcard = filters, style = wxOPEN )
+        dialog = wx.FileDialog ( None, message = 'Select Database File...', wildcard = filters, style = wxOPEN)
 
         # Open Dialog Box and get Selection
         if dialog.ShowModal() == wxID_OK:
@@ -245,10 +244,10 @@ class ExtractPanel(wx.Panel):
             for selection in selected:
                 self.tc_TargetDatabase.Value = selection
         dialog.Destroy()
-    
+
     def bt_ExtractClick(self, event):
 
-        ## DEBUG
+# DEBUG
 #        self.tc_MainDatabase.Value = "test.db"
 #        self.tc_TargetDatabase.Value = "test2.db"
 
@@ -349,6 +348,6 @@ class ExtractPanel(wx.Panel):
         dialog = wx.FileDialog(self, message='Choose a file', style=wx.SAVE|wx.OVERWRITE_PROMPT)
         if dialog.ShowModal() == wx.ID_OK:
             savefile = dialog.GetFilename()
-            saveMe = open(savefile, 'w')#open the file (self.filename) to store our saved data
-            saveMe.write(self.LogWindow.Value)#get our text from the textctrl, and write it out to the file we just opened.
-            saveMe.close()#and then close the file.
+            saveMe = open(savefile, 'w')          #open the file (self.filename) to store our saved data
+            saveMe.write(self.LogWindow.Value)    #get our text from the textctrl, and write it out to the file we just opened.
+            saveMe.close()                        #and then close the file.
