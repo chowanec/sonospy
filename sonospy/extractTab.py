@@ -183,11 +183,20 @@ class ExtractPanel(wx.Panel):
         self.tc_Bitrate = wx.TextCtrl(panel)
 
         # Add them to the sizer (optionBoxSizer)
-        OptionBoxSizer.Add(label_OptionsBitrate, pos=(sizerIndexX, 0), flag=wx.ALL|
-            wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=0)
-        OptionBoxSizer.Add(self.combo_LogicalBitrate, pos=(sizerIndexX,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=1)
-        OptionBoxSizer.Add(self.tc_Bitrate, pos=(sizerIndexX, 2), flag=wx.ALL|
-            wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT, border=0)
+        OptionBoxSizer.Add(label_OptionsBitrate, pos=(sizerIndexX, 0), flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=0)
+        OptionBoxSizer.Add(self.combo_LogicalBitrate, pos=(sizerIndexX, 1), flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT, border=0)
+        OptionBoxSizer.Add(self.tc_Bitrate, pos=(sizerIndexX, 2), flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT, border=0)
+
+        # Last X Albums
+        sizerIndexX += 1
+        label_Last = wx.StaticText(panel, label="Last:")
+        self.tc_Last = wx.TextCtrl(panel)
+        label_Albums = wx.StaticText(panel, label="Albums")
+
+        # Add them to the sizer (optionBoxSizer)
+        OptionBoxSizer.Add(label_Last, pos=(sizerIndexX, 0), flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=0)
+        OptionBoxSizer.Add(self.tc_Last, pos=(sizerIndexX, 1), span=(1,2), flag=wx.ALL|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT, border=0)
+        OptionBoxSizer.Add(label_Albums, pos=(sizerIndexX, 3), flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT, border=0)
 
         OptionBoxSizer.AddGrowableCol(4)
         sbs_ExtractOptions.Add(OptionBoxSizer, flag=wx.TOP|wx.LEFT|wx.RIGHT|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, border=10)
@@ -248,8 +257,8 @@ class ExtractPanel(wx.Panel):
     def bt_ExtractClick(self, event):
 
 # DEBUG
-#        self.tc_MainDatabase.Value = "test.db"
-#        self.tc_TargetDatabase.Value = "test2.db"
+        self.tc_MainDatabase.Value = "test.db"
+        self.tc_TargetDatabase.Value = "test2.db"
 
         if self.tc_MainDatabase.Value == "":
             self.LogWindow.Value += "ERROR:\tNo source database name selected!\n"
@@ -316,12 +325,18 @@ class ExtractPanel(wx.Panel):
                 else:
                     searchCMD += "AND where bitrate " + self.combo_LogicalBitrate.Value + " " + self.tc_Bitrate.Value
 
+            if self.tc_Last.Value != "":
+                if searchCMD != "":
+                    self.LogWindow.Value += "You cannot combine Last " + self.tc_Last.Value + " albums with other search options..."
+                else:
+                    searchCMD = "AS t WHERE t.created >= (SELECT a.created FROM albums AS a WHERE a.albumartist != 'Various Artists' ORDER BY a.created DESC LIMIT " + str(int(self.tc_Last.Value) - 1) + ",1)"
+
             if searchCMD !="":
                 searchCMD = "\"" + searchCMD + "\""
 
                 if self.ck_OverwriteExisting.Value == True:
                     if os.path.exists(self.tc_TargetDatabase.Value) == True:
-                        illegals = ["/", "~", ".", "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "+","=",","]
+                        illegals = ["/", "~", "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "+","=",","]
                         for illegal in illegals:
                             if illegal in self.tc_TargetDatabase.Value:
                                 self.LogWindow.Value += "\nERROR:\tInvalid target database! You cannot use " + illegal + " in the database name."

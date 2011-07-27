@@ -7,7 +7,7 @@
 ###############################################################################
 
 import wx, sys
-import scanTab, extractTab, launchTab
+import scanTab, extractTab, launchTab, nowPlayingTab
 from wxPython.wx import *
 
 ########################################################################
@@ -20,16 +20,11 @@ class SonospyNotebook(wx.Notebook):
     def __init__(self, parent):
         wx.Notebook.__init__(self, parent, id=wx.ID_ANY, style=wx.BK_DEFAULT)
 
-
-        # Create the first tab and add it to the notebook
-        tabOne = scanTab.ScanPanel(self)
-        tabTwo = extractTab.ExtractPanel(self)
-        tabThree = launchTab.LaunchPanel(self)
-
         # UNCOMMENT THIS TO GET BACK TO NORMAL!
-        self.AddPage(tabOne, "Scan")
-        self.AddPage(tabThree, "Launch")
-        self.AddPage(tabTwo, "Extract")
+        self.AddPage(launchTab.LaunchPanel(self), "Launch")
+        self.AddPage(nowPlayingTab.NowPlayingPanel(self), "Now Playing")
+        self.AddPage(scanTab.ScanPanel(self), "Scan")
+        self.AddPage(extractTab.ExtractPanel(self), "Extract")
 
 ########################################################################
 class SonospyFrame(wx.Frame):
@@ -40,7 +35,7 @@ class SonospyFrame(wx.Frame):
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
-        wx.Frame.__init__(self, None, wx.ID_ANY, "Sonospy", size=(520,610))
+        wx.Frame.__init__(self, None, wx.ID_ANY, "Sonospy", size=(520,625))
         panel = wx.Panel(self)
 
         notebook = SonospyNotebook(panel)
