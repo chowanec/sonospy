@@ -39,7 +39,7 @@ if [ $# -ne 4 ]
 fi
 
 # CHECK MY DATE ARGUMENT
-if [ $3 != "inserted" ] && [ $3 != "lastmodified" ] && [ $3 != "created" ] && [ $3 != "lastscanned" ]
+if [ $3 != "inserted" ] && [ $3 != "lastmodified" ] && [ $3 != "created" ] && [ $3 != "lastscanned" ] && [ $3 != "albums" ]
 	then
 	echo "Please provide an argument for the date field: inserted, lastmodified, created or lastscanned."
 	exit 0
@@ -61,4 +61,11 @@ fi
 cp $1 $1.backup
 
 # RUN OUR SCAN
-./scan -d $1 -x $2 -w "where (julianday(datetime('now')) - julianday(datetime($3, 'unixepoch'))) <= $4"
+if [ $3 = "albums" ]
+    then
+    modifier=$(($4 - 1))
+    ./scan -d $1 -x $2 -w "AS t WHERE t.created >= (SELECT a.created FROM $3 AS a Where a.albumartist != 'Various Artists' ORDER BY a.created DESC LIMIT $modifier,1)"
+else
+    ./scan -d $1 -x $2 -w "where (julianday(datetime('now')) - julianday(datetime($3, 'unixepoch'))) <= $4"
+fi
+
