@@ -237,13 +237,13 @@ class ExtractPanel(wx.Panel):
         sizer.Add(self.LogWindow, pos=(5,0), span=(1,6), flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
 
         # Indicate we don't have a worker thread yet
-        EVT_RESULT(self,self.OnResult)
+        EVT_RESULT(self,self.onResult)
         self.worker = None
 
         sizer.AddGrowableCol(2)
         panel.SetSizer(sizer)
 
-    def OnResult(self, event):
+    def onResult(self, event):
         """Show Result status."""
         if event.data is None:
             # Thread aborted (using our convention of None return)
@@ -399,7 +399,7 @@ class ExtractPanel(wx.Panel):
                     getOpts = "-v "
 
                 scanCMD = "./scan " + getOpts +"-d " + self.tc_MainDatabase.Value + " -x " + self.tc_TargetDatabase.Value + " -w " + searchCMD
-                self.LogWindow.AppendText("Extracting from " + self.tc_MainDatabase.Value +" into " + self.tc_TargetDatabase.Value + "...\n\n")
+                self.LogWindow.AppendText("\nExtracting from " + self.tc_MainDatabase.Value +" into " + self.tc_TargetDatabase.Value + "...\n\n")
 
                 # DEBUG
 #                self.LogWindow.AppendText(scanCMD)
@@ -407,7 +407,9 @@ class ExtractPanel(wx.Panel):
                 if not self.worker:
                     self.worker = WorkerThread(self)
                     self.setButtons(False)
-
+            else:
+                self.LogWindow.AppendText("\nERROR:\tYou have no extract options selected!")
+                
     def bt_SaveLogClick(self, event):
         dialog = wx.FileDialog(self, message='Choose a file', style=wx.SAVE|wx.OVERWRITE_PROMPT)
         if dialog.ShowModal() == wx.ID_OK:
