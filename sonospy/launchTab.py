@@ -11,12 +11,14 @@
 #   the cd .. and cd -)
 # - Limit the max number of proxies based on what Mark is doing in his code.
 # - Add statusText() where appropriate.  Replace ERROR:?
+# - Add tooltips.
 ###############################################################################
 
 import wx
 from wxPython.wx import *
 import os
 import subprocess
+import ConfigParser
 
 list_checkboxID = []
 list_checkboxLabel = []
@@ -102,6 +104,11 @@ class LaunchPanel(wx.Panel):
         self.rd_Proxy = wx.RadioButton(panel, label="Proxy")
         self.rd_Web = wx.RadioButton(panel, label="Web")
 
+        if self.configMe("proxy", bool=True) == True:
+            self.rd_Proxy.SetValue(True)
+        else:
+            self.rd_Web.SetValue(True)
+
         sizer.Add(self.bt_Launch, pos=(13,0), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.rd_Proxy, pos=(13,1), flag=wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.rd_Web, pos=(13,2), flag=wx.ALIGN_CENTER_VERTICAL, border=10)
@@ -165,6 +172,32 @@ class LaunchPanel(wx.Panel):
         else:
             self.bt_Launch.Label = "Stop"
             self.statusText("Sonospy Service Started...")
+
+    def configMe(self, term, integer=False, bool=False, parse=False):
+        config = ConfigParser.ConfigParser()
+        config.read("GUIpref.ini")
+
+        if integer == True:
+            fetchMe = config.getint("launch", term)
+        elif bool == True:
+            fetchMe = config.getboolean("launch", term)
+        else:
+            fetchMe = config.get("launch", term)
+
+        if parse == True:
+            fetchMe = fetchMe.replace(",", "\n")
+            fetchMe = str(fetchMe)
+            
+        if fetchMe == NULL:
+            return 1;
+        else:
+            return(fetchMe)
+
+#        # dump entire config file
+#        for section in config.sections():
+#            print section
+#            for option in config.options(section):
+#                print " ", option, "=", config.get(section, option)
 
 def scrubDB(path):
     asps = []

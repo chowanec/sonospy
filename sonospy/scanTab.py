@@ -5,7 +5,12 @@
 ###############################################################################
 # TODO:
 # - STDOUT to LogView.Value in realtime. Broken in WorkerThread?
+# - Hangs on LARGE database read/writes.  Maybe I am trying to push too
+#   much at once to the LogWindow?
 # - Add statusText() where appropriate.  Replace ERROR:?
+# - Handle writing GUIPref.ini
+# - Handle deleted config entries in ini file?
+# - Handle multi-line text box in config file?
 ###############################################################################
 
 import wx
@@ -13,6 +18,7 @@ from wxPython.wx import *
 import os
 import subprocess
 from threading import *
+import ConfigParser
 
 # Define notification event for thread completion
 EVT_RESULT_ID = wx.NewId()
@@ -69,6 +75,7 @@ class ScanPanel(wx.Panel):
 
         self.tc_MainDatabase = wx.TextCtrl(panel)
         self.tc_MainDatabase.SetToolTip(wx.ToolTip(help_Database))
+        self.tc_MainDatabase.Value = self.configMe("database", parse=True)
         sizer.Add(self.tc_MainDatabase, pos=(0, 1), span=(1, 4), flag=wx.TOP|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, border=10)
 
         self.bt_MainDatabase = wx.Button(panel, label="Browse...")
@@ -83,6 +90,7 @@ class ScanPanel(wx.Panel):
         self.multiText = wx.TextCtrl(panel, -1,"",size=(300, 100), style=wx.TE_MULTILINE|wx.TE_READONLY)
         self.multiText.SetToolTip(wx.ToolTip(help_FoldersToScan))
         self.multiText.SetInsertionPoint(0)
+        self.multiText.Value = self.configMe("folder", parse=True)
         folderBoxSizer.Add(self.multiText, flag=wx.EXPAND)
         sizer.Add(folderBoxSizer, pos=(1, 0), span=(1, 6), flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
 
@@ -125,6 +133,7 @@ class ScanPanel(wx.Panel):
         self.ck_ScanVerbose = wx.CheckBox(panel, label="Verbose")
         help_ScanVerbose = "Select this checkbox if you want to turn on the verbose settings during the scan."
         self.ck_ScanVerbose.SetToolTip(wx.ToolTip(help_ScanVerbose))
+        self.ck_ScanVerbose.Value = self.configMe("verbose", bool=True)
         sizer.Add(self.ck_ScanVerbose, pos=(4,2), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
 
         # SAVE LOG TO FILE
@@ -290,4 +299,35 @@ class ScanPanel(wx.Panel):
                     self.worker = WorkerThread(self)
                     self.setButtons(False)
 
+    def configMe(self, term, integer=False, bool=False, parse=False):
+        config = ConfigParser.ConfigParser()
+        config.read("GUIpref.ini")
 
+        if integer == True:
+            fetchMe = config.getint("scan", term)
+        elif bool == True:
+            fetchMe = config.getboolean("scan", term)
+        else:
+            fetchMe = config.get("scan", term)
+
+        if parse == True:
+            # check for space after comma, remove space, replace all commas
+            # with newlines
+            fetchMe = fetchMe.replace(", ", ",")
+            fetchMe = fetchMe.replace(",", "\n")
+            
+            if fetchMe[1] == " ":
+                print "true"
+                fetchMe[0] = ""
+            fetchMe = str(fetchMe)
+
+        if fetchMe == NULL:
+            return 1;
+        else:
+            return(fetchMe)
+
+#        # dump entire config file
+#        for section in config.sections():
+#            print section
+#            for option in config.options(section):
+#                print " ", option, "=", config.get(section, option)

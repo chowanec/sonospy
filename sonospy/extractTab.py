@@ -7,6 +7,8 @@
 # - STDOUT to LogView.Value in realtime. Broken in WorkerThread?
 # - Tons and tons of error checking (check for int on relevant fields)
 # - Add statusText() where appropriate.  Replace ERROR:?
+# - Handle writing GUIPref.ini
+# - Handle deleted config entries in ini file?
 ###############################################################################
 
 import wx
@@ -14,6 +16,7 @@ from wxPython.wx import *
 import os
 import subprocess
 from threading import *
+import ConfigParser
 
 EVT_RESULT_ID = wx.NewId()
 
@@ -68,6 +71,7 @@ class ExtractPanel(wx.Panel):
 
         self.tc_MainDatabase = wx.TextCtrl(panel)
         self.tc_MainDatabase.SetToolTip(wx.ToolTip(help_MainDatabase))
+        self.tc_MainDatabase.Value = self.configMe("database_source")
         sizer.Add(self.tc_MainDatabase, pos=(0, 1), span=(1, 4), flag=wx.TOP|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, border=10)
 
         self.bt_MainDatabase = wx.Button(panel, label="Browse...")
@@ -84,6 +88,7 @@ class ExtractPanel(wx.Panel):
 
         self.tc_TargetDatabase = wx.TextCtrl(panel)
         self.tc_TargetDatabase.SetToolTip(wx.ToolTip(help_TargetDatabase))
+        self.tc_TargetDatabase.Value = self.configMe("database_target")
 
         self.bt_TargetDatabase = wx.Button(panel, label="Browse...")
         self.bt_TargetDatabase.SetToolTip(wx.ToolTip(help_TargetDatabase))
@@ -115,10 +120,11 @@ class ExtractPanel(wx.Panel):
 
         self.combo_LogicalCreated = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
         self.combo_LogicalCreated.SetToolTip(wx.ToolTip(help_Created))
-        self.combo_LogicalCreated.Select(1)
+        self.combo_LogicalCreated.Select(self.configMe("createdIdx", integer=True))
 
         self.tc_DaysAgoCreated = wx.TextCtrl(panel)
         self.tc_DaysAgoCreated.SetToolTip(wx.ToolTip(help_Created))
+        self.tc_DaysAgoCreated.Value = self.configMe("createdVal")
 
         label_DaysAgoCreated = wx.StaticText(panel, label="days ago")
         label_DaysAgoCreated.SetToolTip(wx.ToolTip(help_Created))
@@ -137,11 +143,12 @@ class ExtractPanel(wx.Panel):
 
         self.combo_LogicalInserted = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
         self.combo_LogicalInserted.SetToolTip(wx.ToolTip(help_Inserted))
-        self.combo_LogicalInserted.Select(1)
+        self.combo_LogicalInserted.Select(self.configMe("insertedIdx", integer=True))
 
         self.tc_DaysAgoInserted = wx.TextCtrl(panel)
         self.tc_DaysAgoInserted.SetToolTip(wx.ToolTip(help_Inserted))
-
+        self.tc_DaysAgoInserted.Value = self.configMe("insertedVal")
+        
         label_DaysAgoInserted = wx.StaticText(panel, label="days ago")
         label_DaysAgoInserted.SetToolTip(wx.ToolTip(help_Inserted))
 
@@ -159,7 +166,7 @@ class ExtractPanel(wx.Panel):
 
         self.combo_LogicalModified = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
         self.combo_LogicalModified.SetToolTip(wx.ToolTip(help_Modified))
-        self.combo_LogicalModified.Select(1)
+        self.combo_LogicalModified.Select(self.configMe("modifiedIdx", integer=True))
 
         self.tc_DaysAgoModified = wx.TextCtrl(panel)
         self.tc_DaysAgoModified.SetToolTip(wx.ToolTip(help_Modified))
@@ -180,11 +187,12 @@ class ExtractPanel(wx.Panel):
         label_OptionsAccessed.SetToolTip(wx.ToolTip(help_Accessed))
 
         self.combo_LogicalAccessed = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
-        self.combo_LogicalAccessed.Select(1)
+        self.combo_LogicalAccessed.Select(self.configMe("accessedIdx", integer=True))
         self.combo_LogicalAccessed.SetToolTip(wx.ToolTip(help_Accessed))
 
         self.tc_DaysAgoAccessed = wx.TextCtrl(panel)
         self.tc_DaysAgoAccessed.SetToolTip(wx.ToolTip(help_Accessed))
+        self.tc_DaysAgoAccessed.Value = self.configMe("accessedVal")
 
         label_DaysAgoAccessed = wx.StaticText(panel, label="days ago")
         label_DaysAgoAccessed.SetToolTip(wx.ToolTip(help_Accessed))
@@ -202,11 +210,12 @@ class ExtractPanel(wx.Panel):
         label_OptionsYear.SetToolTip(wx.ToolTip(help_Year))
 
         self.combo_LogicalYear = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
-        self.combo_LogicalYear.Select(1)
+        self.combo_LogicalYear.Select(self.configMe("yearIdx", integer=True))
         self.combo_LogicalYear.SetToolTip(wx.ToolTip(help_Year))
 
         self.tc_Year = wx.TextCtrl(panel)
         self.tc_Year.SetToolTip(wx.ToolTip(help_Year))
+        self.tc_Year.Value = self.configMe("yearVal")
 
         # Add them to the sizer (optionBoxSizer)
         OptionBoxSizer.Add(label_OptionsYear, pos=(sizerIndexX, 0), flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=0)
@@ -220,7 +229,8 @@ class ExtractPanel(wx.Panel):
         label_OptionsGenre.SetToolTip(wx.ToolTip(help_Genre))
 
         self.tc_Genre = wx.TextCtrl(panel)
-        self.tc_Genre .SetToolTip(wx.ToolTip(help_Genre))
+        self.tc_Genre.SetToolTip(wx.ToolTip(help_Genre))
+        self.tc_Genre.Value = self.configMe("genre")
 
         # Add them to the sizer (optionBoxSizer)
         OptionBoxSizer.Add(label_OptionsGenre, pos=(sizerIndexX, 0), flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=0)
@@ -234,6 +244,7 @@ class ExtractPanel(wx.Panel):
 
         self.tc_Artist = wx.TextCtrl(panel)
         self.tc_Artist.SetToolTip(wx.ToolTip(help_Artist))
+        self.tc_Artist.Value = self.configMe("artist")
 
         # Add them to the sizer (optionBoxSizer)
         OptionBoxSizer.Add(label_OptionsArtist, pos=(sizerIndexX, 0), flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=0)
@@ -247,6 +258,7 @@ class ExtractPanel(wx.Panel):
 
         self.tc_Composer = wx.TextCtrl(panel)
         self.tc_Composer.SetToolTip(wx.ToolTip(help_Composer))
+        self.tc_Composer.Value = self.configMe("composer")
 
         # Add them to the sizer (optionBoxSizer)
         OptionBoxSizer.Add(label_OptionsComposer, pos=(sizerIndexX, 0), flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=0)
@@ -259,11 +271,12 @@ class ExtractPanel(wx.Panel):
         label_OptionsBitrate.SetToolTip(wx.ToolTip(help_Bitrate))
 
         self.combo_LogicalBitrate = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
-        self.combo_LogicalBitrate.Select(1)
+        self.combo_LogicalBitrate.Select(self.configMe("bitrateIdx", integer=True))
         self.combo_LogicalBitrate.SetToolTip(wx.ToolTip(help_Bitrate))
 
         self.tc_Bitrate = wx.TextCtrl(panel)
         self.tc_Bitrate.SetToolTip(wx.ToolTip(help_Bitrate))
+        self.tc_Bitrate.Value = self.configMe("bitrateVal")
 
         # Add them to the sizer (optionBoxSizer)
         OptionBoxSizer.Add(label_OptionsBitrate, pos=(sizerIndexX, 0), flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=0)
@@ -278,6 +291,7 @@ class ExtractPanel(wx.Panel):
 
         self.tc_Last = wx.TextCtrl(panel)
         self.tc_Last.SetToolTip(wx.ToolTip(help_Last))
+        self.tc_Last.Value = self.configMe("last")
 
         label_Albums = wx.StaticText(panel, label="Albums")
         label_Albums.SetToolTip(wx.ToolTip(help_Last))
@@ -301,6 +315,7 @@ class ExtractPanel(wx.Panel):
         self.ck_ExtractVerbose = wx.CheckBox(panel, label="Verbose")
         help_ExtractVerbose = "Select this checkbox if you want to turn on the verbose settings during the extract."
         self.ck_ExtractVerbose.SetToolTip(wx.ToolTip(help_ExtractVerbose))
+        self.ck_ExtractVerbose.Value = self.configMe("verbose", bool=True)
 
         self.bt_SaveLog = wx.Button(panel, label="Save to Log")
         help_SaveLogToFile = "Save the log below to a file."
@@ -310,6 +325,7 @@ class ExtractPanel(wx.Panel):
         self.ck_OverwriteExisting = wx.CheckBox(panel, label="Overwrite")
         help_Overwrite = "Select this checkbox if you want to overwrite the Target Database."
         self.ck_OverwriteExisting.SetToolTip(wx.ToolTip(help_Overwrite))
+        self.ck_OverwriteExisting.Value = self.configMe("overwrite", bool=True)
 
         sizer.Add(self.bt_Extract, pos=(3,0), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.ck_ExtractVerbose, pos=(3,2), flag=wx.ALIGN_CENTER_VERTICAL, border=10)
@@ -516,3 +532,29 @@ class ExtractPanel(wx.Panel):
             saveMe = open(savefile, 'w')
             saveMe.write(self.LogWindow.Value)
             saveMe.close()
+
+    def configMe(self, term, integer=False, bool=False, parse=False):
+        config = ConfigParser.ConfigParser()
+        config.read("GUIpref.ini")
+
+        if integer == True:
+            fetchMe = config.getint("extract", term)
+        elif bool == True:
+            fetchMe = config.getboolean("extract", term)
+        else:
+            fetchMe = config.get("extract", term)
+
+        if parse == True:
+            fetchMe = fetchMe.replace(",", "\n")
+            fetchMe = str(fetchMe)
+            
+        if fetchMe == NULL:
+            return 1;
+        else:
+            return(fetchMe)
+
+#        # dump entire config file
+#        for section in config.sections():
+#            print section
+#            for option in config.options(section):
+#                print " ", option, "=", config.get(section, option)
