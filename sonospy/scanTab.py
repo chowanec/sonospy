@@ -4,7 +4,7 @@
 # Copyright, blah, blah
 ###############################################################################
 # TODO:
-#      - Multithreading the STDOUT to LogView.Value in realtime.
+#      - STDOUT to LogView.Value in realtime. Broken in WorkerThread?
 #      - Cosmetic work -- grey out log until it is activated, etc.
 ###############################################################################
 
@@ -127,9 +127,10 @@ class ScanPanel(wx.Panel):
         self.multiText.Value += "~/Network/Music/Yuck"
 #-------------------------------------------------------------------------------
 
-        EVT_RESULT(self,self.OnResult)
+
 
         # Indicate we don't have a worker thread yet
+        EVT_RESULT(self,self.OnResult)
         self.worker = None
 
         sizer.AddGrowableCol(2)
@@ -149,9 +150,9 @@ class ScanPanel(wx.Panel):
         self.worker = None
 
     def bt_ScanRepairClick(self, event):
-# DEBUG
+# DEBUG ------------------------------------------------------------------------
 #        self.tc_MainDatabase.Value = "test.db"
-
+# ------------------------------------------------------------------------------
         global scanCMD
         getOpts = ""
 
@@ -169,7 +170,6 @@ class ScanPanel(wx.Panel):
                 self.worker = WorkerThread(self)
 
     def bt_MainDatabaseClick(self, event):
-        # Create a list of filters
         filters = 'Text files (*.db)|*.db|All files (*.*)|*.*'
         dialog = wx.FileDialog ( None, message = 'Select Database File...', wildcard = filters, style = wxOPEN)
 
@@ -194,11 +194,16 @@ class ScanPanel(wx.Panel):
         dialog = wx.FileDialog(self, message='Choose a file', style=wx.SAVE|wx.OVERWRITE_PROMPT)
         if dialog.ShowModal() == wx.ID_OK:
             savefile = dialog.GetFilename()
-            saveMe = open(savefile, 'w')#open the file (self.filename) to store our saved data
-            saveMe.write(self.LogWindow.Value)#get our text from the textctrl, and write it out to the file we just opened.
-            saveMe.close()#and then close the file.
+
+            saveMe = open(savefile, 'w')
+            saveMe.write(self.LogWindow.Value)
+            saveMe.close()
 
     def setButtons(self, state):
+        """
+        Toggle for the button states.
+        """
+        
         if state == True:
             self.bt_FoldersToScanAdd.Enable()
             self.bt_FoldersToScanClear.Enable()
