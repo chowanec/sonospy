@@ -10,6 +10,7 @@
 # - Fix the core command to work on Windows and not be so janky (i.e. remove
 #   the cd .. and cd -)
 # - Limit the max number of proxies based on what Mark is doing in his code.
+# - Add statusText() where appropriate.  Replace ERROR:?
 ###############################################################################
 
 import wx
@@ -108,6 +109,9 @@ class LaunchPanel(wx.Panel):
         sizer.AddGrowableCol(2)
         panel.SetSizer(sizer)
 
+    def statusText(self, line):
+        self.GetParent().GetParent().GetParent().SetStatusText(line)
+        
     def OnCheck(self, event):
 
 # DEBUG ------------------------------------------------------------------------
@@ -148,16 +152,19 @@ class LaunchPanel(wx.Panel):
             for item in range(len(list_checkboxID)):
                 if wx.FindWindowById(list_checkboxID[item]).Value == True:
                     launchCMD += "-wSonospy=" + list_txtctrlLabel[item] + "," + list_checkboxLabel[item] + " "
-            # print it for debug
+# DEBUG ------------------------------------------------------------------------
             print launchCMD
+# ------------------------------------------------------------------------------
             # kludge to get me back to this directory
             launchCMD += ";cd -"
 
         proc = subprocess.Popen([launchCMD],shell=True)
         if self.bt_Launch.Label == "Stop":
             self.bt_Launch.Label = "Launch"
+            self.statusText("Sonospy Service Stopped...")
         else:
             self.bt_Launch.Label = "Stop"
+            self.statusText("Sonospy Service Started...")
 
 def scrubDB(path):
     asps = []

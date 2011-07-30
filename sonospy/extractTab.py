@@ -4,8 +4,9 @@
 # Copyright, blah, blah
 ###############################################################################
 # TODO:
-#      - STDOUT to LogView.Value in realtime. Broken in WorkerThread?
-#      - Tons and tons of error checking (check for int on relevant fields)
+# - STDOUT to LogView.Value in realtime. Broken in WorkerThread?
+# - Tons and tons of error checking (check for int on relevant fields)
+# - Add statusText() where appropriate.  Replace ERROR:?
 ###############################################################################
 
 import wx
@@ -244,6 +245,9 @@ class ExtractPanel(wx.Panel):
         sizer.AddGrowableCol(2)
         panel.SetSizer(sizer)
 
+    def statusText(self, line):
+        self.GetParent().GetParent().GetParent().SetStatusText(line)
+        
     def onResult(self, event):
         """Show Result status."""
         if event.data is None:

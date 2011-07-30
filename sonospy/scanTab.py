@@ -4,8 +4,8 @@
 # Copyright, blah, blah
 ###############################################################################
 # TODO:
-#      - STDOUT to LogView.Value in realtime. Broken in WorkerThread?
-#      - Figure out how to interact with the status bar.
+# - STDOUT to LogView.Value in realtime. Broken in WorkerThread?
+# - Add statusText() where appropriate.  Replace ERROR:?
 ###############################################################################
 
 import wx
@@ -133,6 +133,10 @@ class ScanPanel(wx.Panel):
 
         sizer.AddGrowableCol(2)
         panel.SetSizer(sizer)
+        self.statusText("Scan your music with this tab...")
+        
+    def statusText(self, line):
+        self.GetParent().GetParent().GetParent().SetStatusText(line)
 
     def onResult(self, event):
         """Show Result status."""
@@ -140,12 +144,12 @@ class ScanPanel(wx.Panel):
             # Thread aborted (using our convention of None return)
             self.LogWindow.AppendText("\n[Complete]\n\n")
             self.setButtons(True)
-            wx.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
         else:
             # Process results here
             self.LogWindow.AppendText(event.data)
         # In either event, the worker is done
         self.worker = None
+        statusText = ""
 
     def bt_ScanRepairClick(self, event):
 # DEBUG ------------------------------------------------------------------------
@@ -164,6 +168,8 @@ class ScanPanel(wx.Panel):
             scanCMD = "./scan " + getOpts +"-d " + self.tc_MainDatabase.Value + " -r"
 
             self.LogWindow.AppendText("Running Repair on " + self.tc_MainDatabase.Value + "...\n\n")
+            statusText("Running Repair...")
+
             if not self.worker:
                 self.worker = WorkerThread(self)
                 self.setButtons(False)
@@ -178,7 +184,9 @@ class ScanPanel(wx.Panel):
             selected = dialog.GetFilenames()
             for selection in selected:
                 self.tc_MainDatabase.Value = selection
+                self.statusText("Database selected...")
         dialog.Destroy()
+        
 
     def bt_FoldersToScanAddClick(self, event):
         dialog = wx.DirDialog(self, "Add a Directory...", style=wx.DD_DEFAULT_STYLE)
@@ -212,6 +220,7 @@ class ScanPanel(wx.Panel):
             self.bt_ScanRepair.Enable()
             self.bt_ScanUpdate.Enable()
             self.ck_ScanVerbose.Enable()
+            wx.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
         else:
             self.bt_FoldersToScanAdd.Disable()
             self.bt_FoldersToScanClear.Disable()
@@ -220,6 +229,8 @@ class ScanPanel(wx.Panel):
             self.bt_ScanRepair.Disable()
             self.bt_ScanUpdate.Disable()
             self.ck_ScanVerbose.Disable()
+            wx.SetCursor(wx.StockCursor(wx.CURSOR_WATCH))
+
 
     def bt_ScanUpdateClick(self, event):
         self.LogWindow.Enable()
@@ -245,6 +256,7 @@ class ScanPanel(wx.Panel):
                 self.LogWindow.AppendText("ERROR\tNo folder selected to scan!\n")
             else:
                 self.LogWindow.AppendText("Running Scan...\n\n")
+                self.statusText("Running Scan...")
                 while (numLines < maxLines):
                     scanCMD += str(self.multiText.GetLineText(numLines)) + " "
                     numLines += 1
@@ -253,5 +265,5 @@ class ScanPanel(wx.Panel):
                 if not self.worker:
                     self.worker = WorkerThread(self)
                     self.setButtons(False)
-                    wx.SetCursor(wx.StockCursor(wx.CURSOR_WATCH))
+
 
