@@ -63,36 +63,43 @@ class ScanPanel(wx.Panel):
 
     # [0] Main Database Text, Entry and Browse Button --------------------------
         label_MainDatabase = wx.StaticText(panel, label="Database:")
-        sizer.Add(label_MainDatabase, pos=(0, 0), flag=wx.LEFT|
-            wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=10)
+        help_Database = "The 'Database' is the main collection of music you will create or update. Click BROWSE to select a previously created database, or enter a new name here."
+        label_MainDatabase.SetToolTip(wx.ToolTip(help_Database))
+        sizer.Add(label_MainDatabase, pos=(0, 0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=10)
 
         self.tc_MainDatabase = wx.TextCtrl(panel)
-        sizer.Add(self.tc_MainDatabase, pos=(0, 1), span=(1, 4), flag=wx.TOP|
-            wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, border=10)
+        self.tc_MainDatabase.SetToolTip(wx.ToolTip(help_Database))
+        sizer.Add(self.tc_MainDatabase, pos=(0, 1), span=(1, 4), flag=wx.TOP|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, border=10)
 
         self.bt_MainDatabase = wx.Button(panel, label="Browse...")
-        sizer.Add(self.bt_MainDatabase, pos=(0, 5), flag=wx.LEFT|wx.RIGHT|wx.TOP|
-            wx.ALIGN_CENTER_VERTICAL, border=10)
-        self.bt_MainDatabase.Bind(wx.EVT_BUTTON, self.bt_MainDatabaseClick,
-            self.bt_MainDatabase)
+        self.bt_MainDatabase.SetToolTip(wx.ToolTip(help_Database))
+        sizer.Add(self.bt_MainDatabase, pos=(0, 5), flag=wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, border=10)
+        self.bt_MainDatabase.Bind(wx.EVT_BUTTON, self.bt_MainDatabaseClick,self.bt_MainDatabase)
     # --------------------------------------------------------------------------
     # [1] Paths to scan for new Music ------------------------------------------
         self.sb_FoldersToScan = wx.StaticBox(panel, label="Folders to Scan:", size=(200, 100))
+        help_FoldersToScan = "Folders you will scan for music files are listed here.  Click ADD to browse for a *top-level* folder.  Scan will search all sub-folders for valid music."
         folderBoxSizer = wx.StaticBoxSizer(self.sb_FoldersToScan, wx.VERTICAL)
         self.multiText = wx.TextCtrl(panel, -1,"",size=(300, 100), style=wx.TE_MULTILINE|wx.TE_READONLY)
+        self.multiText.SetToolTip(wx.ToolTip(help_FoldersToScan))
         self.multiText.SetInsertionPoint(0)
         folderBoxSizer.Add(self.multiText, flag=wx.EXPAND)
         sizer.Add(folderBoxSizer, pos=(1, 0), span=(1, 6), flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
 
     # --------------------------------------------------------------------------
     # [2] Buttons to Add Folder, Clear Scan Area -------------------------------
+        # ADD FOLDER
         self.bt_FoldersToScanAdd = wx.Button(panel, label="Add")
-        self.bt_FoldersToScanClear = wx.Button(panel, label="Clear")
-        sizer.Add(self.bt_FoldersToScanAdd, pos=(2,0), span=(1,2), flag=wx.LEFT|wx.RIGHT|
-            wx.ALIGN_CENTER_VERTICAL, border=10)
+        help_FoldersToScanAdd = "Add a top-level folder to the 'Folders to Scan' field.  The scan will search any sub-folders beneath whatever folder you add."
+        self.bt_FoldersToScanAdd.SetToolTip(wx.ToolTip(help_FoldersToScanAdd))
         self.bt_FoldersToScanAdd.Bind(wx.EVT_BUTTON, self.bt_FoldersToScanAddClick, self.bt_FoldersToScanAdd)
-        sizer.Add(self.bt_FoldersToScanClear, pos=(2,5), flag=wx.LEFT|wx.RIGHT|
-            wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.bt_FoldersToScanAdd, pos=(2,0), span=(1,2), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+
+        # CLEAR SCAN AREA
+        self.bt_FoldersToScanClear = wx.Button(panel, label="Clear")
+        help_FoldersToScanClear = "Clear the Folders to Scan field."
+        self.bt_FoldersToScanClear.SetToolTip(wx.ToolTip(help_FoldersToScanClear))
+        sizer.Add(self.bt_FoldersToScanClear, pos=(2,5), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
         self.bt_FoldersToScanClear.Bind(wx.EVT_BUTTON, self.bt_FoldersToScanClearClick, self.bt_FoldersToScanClear)
     # --------------------------------------------------------------------------
     # [3] Separator line -------------------------------------------------------
@@ -100,17 +107,32 @@ class ScanPanel(wx.Panel):
         sizer.Add(hl_SepLine1, pos=(3, 0), span=(1, 6), flag=wx.EXPAND, border=10)
     # --------------------------------------------------------------------------
     # [4] Add Scan Options and Scan Button -------------------------------------
+        # SCAN/UPDATE
         self.bt_ScanUpdate = wx.Button(panel, label="Scan/Update")
+        help_ScanUpdate = "Click here to begin your scan of the folders listed above.  This will create a new database if one doesn't exist.  Otherwise it will update the database with any new music it finds."
+        self.bt_ScanUpdate.SetToolTip(wx.ToolTip(help_ScanUpdate))
         self.bt_ScanUpdate.Bind(wx.EVT_BUTTON, self.bt_ScanUpdateClick, self.bt_ScanUpdate)
-        self.bt_ScanRepair = wx.Button(panel, label="Repair")
-        self.bt_ScanRepair.Bind(wx.EVT_BUTTON, self.bt_ScanRepairClick, self.bt_ScanRepair)
-        self.ck_ScanVerbose = wx.CheckBox(panel, label="Verbose")
-        self.bt_SaveLog = wx.Button(panel, label="Save to Log")
-        self.bt_SaveLog.Bind(wx.EVT_BUTTON, self.bt_SaveLogClick, self.bt_SaveLog)
         sizer.Add(self.bt_ScanUpdate, pos=(4,0), span=(1,2), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(self.ck_ScanVerbose, pos=(4,2), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(self.bt_SaveLog, pos=(4,4), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=5)
+
+        # REPAIR
+        self.bt_ScanRepair = wx.Button(panel, label="Repair")
+        help_ScanRepair = "Click here to repair the 'Database' listed above."
+        self.bt_ScanRepair.SetToolTip(wx.ToolTip(help_ScanRepair))
+        self.bt_ScanRepair.Bind(wx.EVT_BUTTON, self.bt_ScanRepairClick, self.bt_ScanRepair)
         sizer.Add(self.bt_ScanRepair, pos=(4,5), span=(1,2), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+
+        # VERBOSE
+        self.ck_ScanVerbose = wx.CheckBox(panel, label="Verbose")
+        help_ScanVerbose = "Select this checkbox if you want to turn on the verbose settings during the scan."
+        self.ck_ScanVerbose.SetToolTip(wx.ToolTip(help_ScanVerbose))
+        sizer.Add(self.ck_ScanVerbose, pos=(4,2), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+
+        # SAVE LOG TO FILE
+        self.bt_SaveLog = wx.Button(panel, label="Save Log to File")
+        help_SaveLogToFile = "Save the log below to a file."
+        self.bt_SaveLog.SetToolTip(wx.ToolTip(help_SaveLogToFile))
+        self.bt_SaveLog.Bind(wx.EVT_BUTTON, self.bt_SaveLogClick, self.bt_SaveLog)
+        sizer.Add(self.bt_SaveLog, pos=(4,4), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=5)
     # --------------------------------------------------------------------------
     # [5] Separator line ------------------------------------------------------
         hl_SepLine2 = wx.StaticLine(panel, 0, (250, 50), (300,1))
@@ -118,6 +140,8 @@ class ScanPanel(wx.Panel):
     # --------------------------------------------------------------------------
     # [6] Output/Log Box -------------------------------------------------------
         self.LogWindow = wx.TextCtrl(panel, -1,"",size=(100, 300), style=wx.TE_MULTILINE|wx.TE_READONLY)
+        help_LogWindow = "Results of a scan or repair will appear here."
+        self.LogWindow.SetToolTip(wx.ToolTip(help_LogWindow))
         self.LogWindow.SetInsertionPoint(0)
         self.LogWindow.Disable()
         sizer.Add(self.LogWindow, pos=(6,0), span=(1,6), flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
