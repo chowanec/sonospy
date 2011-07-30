@@ -10,9 +10,8 @@
 
 import wx
 from wxPython.wx import *
-import os, sys
+import os
 import subprocess
-import sonospyGUI
 from threading import *
 
 # Define notification event for thread completion
@@ -129,13 +128,13 @@ class ScanPanel(wx.Panel):
 # ------------------------------------------------------------------------------
 
         # Indicate we don't have a worker thread yet
-        EVT_RESULT(self,self.OnResult)
+        EVT_RESULT(self,self.onResult)
         self.worker = None
 
         sizer.AddGrowableCol(2)
         panel.SetSizer(sizer)
 
-    def OnResult(self, event):
+    def onResult(self, event):
         """Show Result status."""
         if event.data is None:
             # Thread aborted (using our convention of None return)

@@ -4,6 +4,7 @@
 # Copyright, blah, blah
 ###############################################################################
 # TODO:
+#      - STDOUT to LogView.Value in realtime. Broken in WorkerThread?
 #      - Tons and tons of error checking (check for int on relevant fields)
 ###############################################################################
 
