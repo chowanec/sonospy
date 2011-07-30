@@ -308,8 +308,8 @@ class ExtractPanel(wx.Panel):
         self.LogWindow.Enable()
 
 # DEBUG ------------------------------------------------------------------------
-        self.tc_MainDatabase.Value = "test.db"
-        self.tc_TargetDatabase.Value = "test2.db"
+#        self.tc_MainDatabase.Value = "test.db"
+#        self.tc_TargetDatabase.Value = "test2.db"
 # ------------------------------------------------------------------------------
         if self.tc_MainDatabase.Value == "":
             self.LogWindow.AppendText("ERROR:\tNo source database name selected!\n")
@@ -402,12 +402,15 @@ class ExtractPanel(wx.Panel):
                 scanCMD = "./scan " + getOpts +"-d " + self.tc_MainDatabase.Value + " -x " + self.tc_TargetDatabase.Value + " -w " + searchCMD
                 self.LogWindow.AppendText("\nExtracting from " + self.tc_MainDatabase.Value +" into " + self.tc_TargetDatabase.Value + "...\n\n")
 
-                # DEBUG
+# DEBUG ------------------------------------------------------------------------
 #                self.LogWindow.AppendText(scanCMD)
+# ------------------------------------------------------------------------------
 
+# Multithreading is below this line.
                 if not self.worker:
                     self.worker = WorkerThread(self)
                     self.setButtons(False)
+# ------------------------------------------------------------------------------
             else:
                 self.LogWindow.AppendText("\nERROR:\tYou have no extract options selected!")
                 

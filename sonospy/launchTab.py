@@ -4,21 +4,18 @@
 # Copyright, blah, blah
 ###############################################################################
 # TODO:
-#    - Layout
-#    - Connect Web only
-#    - Connect Proxy only
-#    - Connect Sort ck
-#    - Connect Show Duplicates
-#    - Add refresh button
-#    - Fix the core command to work on Windows and not be so janky (i.e. remove
-#      the cd .. and cd -)
+# - Connect Web only
+# - Connect Show Duplicates
+# - Add refresh button
+# - Fix the core command to work on Windows and not be so janky (i.e. remove
+#   the cd .. and cd -)
+# - Limit the max number of proxies based on what Mark is doing in his code.
 ###############################################################################
 
 import wx
 from wxPython.wx import *
 import os
 import subprocess
-import re
 
 list_checkboxID = []
 list_checkboxLabel = []
@@ -40,9 +37,9 @@ class LaunchPanel(wx.Panel):
         xIndex = 0
         yIndex = 0
 
-    # [0] Make Header Columns  --------------------------
+    # [0] Make Header Columns --------------------------
         label_ProxyName = wx.StaticText(panel, label="Display Name")
-        self.ck_EnableAll = wxCheckBox(panel, label="Enable All  ")
+        self.ck_EnableAll = wxCheckBox(panel, label="Enable All ")
         self.ck_EnableAll.Bind(wx.EVT_CHECKBOX, self.enableAllChecks, self.ck_EnableAll)
         sizer.Add(label_ProxyName, pos=(xIndex, 2), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=10)
         sizer.Add(self.ck_EnableAll, pos=(xIndex, 0), span=(1,2), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=10)
@@ -112,10 +109,12 @@ class LaunchPanel(wx.Panel):
         panel.SetSizer(sizer)
 
     def OnCheck(self, event):
-# DEBUG
-#        for item in range(len(list_checkboxID)):
-#            print "Checkbox " + str(item) + ":\t\t\tID:" + str(list_checkboxID[item]) + "\tLABEL:" + list_checkboxLabel[item]
-#            print "Text Control " + str(item) + ":\t\tID:" + str(list_txtctrlID[item]) + "\tLABEL:" + list_txtctrlLabel[item]
+
+# DEBUG ------------------------------------------------------------------------
+#   for item in range(len(list_checkboxID)):
+#       print "Checkbox " + str(item) + ":\t\t\tID:" + str(list_checkboxID[item]) + "\tLABEL:" + list_checkboxLabel[item]
+#       print "Text Control " + str(item) + ":\t\tID:" + str(list_txtctrlID[item]) + "\tLABEL:" + list_txtctrlLabel[item]
+# ------------------------------------------------------------------------------
         pass
 
     def enableAllChecks(self, event):
@@ -167,5 +166,3 @@ def scrubDB(path):
             if file.endswith('.db'):
                     asps.append(file)
     return asps
-
-

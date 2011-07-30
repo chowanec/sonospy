@@ -123,8 +123,8 @@ class ScanPanel(wx.Panel):
         sizer.Add(self.LogWindow, pos=(6,0), span=(1,6), flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
 
 # DEBUG ------------------------------------------------------------------------
-        self.multiText.Value = "~/Network/Music/Weezer\n"
-        self.multiText.Value += "~/Network/Music/Yuck"
+#        self.multiText.Value = "~/Network/Music/Weezer\n"
+#        self.multiText.Value += "~/Network/Music/Yuck"
 # ------------------------------------------------------------------------------
 
         # Indicate we don't have a worker thread yet
@@ -149,7 +149,7 @@ class ScanPanel(wx.Panel):
 
     def bt_ScanRepairClick(self, event):
 # DEBUG ------------------------------------------------------------------------
-        self.tc_MainDatabase.Value = "test.db"
+#        self.tc_MainDatabase.Value = "test.db"
 # ------------------------------------------------------------------------------
         global scanCMD
         getOpts = ""
@@ -225,7 +225,7 @@ class ScanPanel(wx.Panel):
         self.LogWindow.Enable()
 
 # DEBUG ------------------------------------------------------------------------
-        self.tc_MainDatabase.Value = "test.db"
+#        self.tc_MainDatabase.Value = "test.db"
 #-------------------------------------------------------------------------------
         if self.tc_MainDatabase.Value == "":
             self.LogWindow.AppendText("ERROR:\tNo database name selected!\n")
