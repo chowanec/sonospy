@@ -5,13 +5,14 @@
 ###############################################################################
 # TODO:
 #      - STDOUT to LogView.Value in realtime. Broken in WorkerThread?
-#      - Cosmetic work -- grey out log until it is activated, etc.
+#      - Figure out how to interact with the status bar.
 ###############################################################################
 
 import wx
 from wxPython.wx import *
 import os, sys
 import subprocess
+import sonospyGUI
 from threading import *
 
 # Define notification event for thread completion
@@ -125,9 +126,7 @@ class ScanPanel(wx.Panel):
 # DEBUG ------------------------------------------------------------------------
         self.multiText.Value = "~/Network/Music/Weezer\n"
         self.multiText.Value += "~/Network/Music/Yuck"
-#-------------------------------------------------------------------------------
-
-
+# ------------------------------------------------------------------------------
 
         # Indicate we don't have a worker thread yet
         EVT_RESULT(self,self.OnResult)
@@ -140,35 +139,37 @@ class ScanPanel(wx.Panel):
         """Show Result status."""
         if event.data is None:
             # Thread aborted (using our convention of None return)
-            self.LogWindow.Value += "\n[Complete]\n"
+            self.LogWindow.AppendText("\n[Complete]\n\n")
             self.setButtons(True)
             wx.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
         else:
             # Process results here
-            self.LogWindow.Value +=  event.data
+            self.LogWindow.AppendText(event.data)
         # In either event, the worker is done
         self.worker = None
 
     def bt_ScanRepairClick(self, event):
 # DEBUG ------------------------------------------------------------------------
-#        self.tc_MainDatabase.Value = "test.db"
+        self.tc_MainDatabase.Value = "test.db"
 # ------------------------------------------------------------------------------
         global scanCMD
         getOpts = ""
 
         self.LogWindow.Enable()
         if self.tc_MainDatabase.Value == "":
-            self.LogWindow.Value += "ERROR:\tNo database name selected!\n"
+            self.LogWindow.AppendText("ERROR:\tNo database name selected!\n")
         else:
             if self.ck_ScanVerbose.Value == True:
                 getOpts = "-v "
 
             scanCMD = "./scan " + getOpts +"-d " + self.tc_MainDatabase.Value + " -r"
 
-            self.LogWindow.Value += "Running Repair on " + self.tc_MainDatabase.Value + "...\n\n"
+            self.LogWindow.AppendText("Running Repair on " + self.tc_MainDatabase.Value + "...\n\n")
             if not self.worker:
                 self.worker = WorkerThread(self)
-
+                self.setButtons(False)
+                wx.SetCursor(wx.StockCursor(wx.CURSOR_WATCH))
+                
     def bt_MainDatabaseClick(self, event):
         filters = 'Text files (*.db)|*.db|All files (*.*)|*.*'
         dialog = wx.FileDialog ( None, message = 'Select Database File...', wildcard = filters, style = wxOPEN)
@@ -228,7 +229,7 @@ class ScanPanel(wx.Panel):
         self.tc_MainDatabase.Value = "test.db"
 #-------------------------------------------------------------------------------
         if self.tc_MainDatabase.Value == "":
-            self.LogWindow.Value += "ERROR:\tNo database name selected!\n"
+            self.LogWindow.AppendText("ERROR:\tNo database name selected!\n")
         else:
             getOpts = ""
 
@@ -242,9 +243,9 @@ class ScanPanel(wx.Panel):
             maxLines=(int(self.multiText.GetNumberOfLines()))
 
             if self.multiText.GetLineText(numLines) == "":
-                self.LogWindow.Value += "ERROR\tNo folder selected to scan!\n"
+                self.LogWindow.AppendText("ERROR\tNo folder selected to scan!\n")
             else:
-                self.LogWindow.Value += "Running Scan...\n\n"
+                self.LogWindow.AppendText("Running Scan...\n\n")
                 while (numLines < maxLines):
                     scanCMD += str(self.multiText.GetLineText(numLines)) + " "
                     numLines += 1
