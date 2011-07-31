@@ -27,14 +27,23 @@ import re
 import time
 import codecs
 import ConfigParser
+import datetime
 from collections import defaultdict
 from dateutil.parser import parse as parsedate
+from scanfuncs import adjust_tracknumber, truncate_number
 import errors
 errors.catch_errors()
 
-MUTAGEN_WARNING_FILE = 'errors/scanwarnings.txt'
+G_QUIET = False
+G_VERBOSE = False
+MUTAGEN_WARNING_FILE = 'logs/scanwarnings.txt'
+wfile = codecs.open(MUTAGEN_WARNING_FILE,'w','utf-8')
 MULTI_SEPARATOR = '\n'
 enc = sys.getfilesystemencoding()
+DEFAULTYEAR = 1
+DEFAULTMONTH = 1
+DEFAULTDAY = 1
+DEFAULTDATE = datetime.datetime(DEFAULTYEAR, DEFAULTMONTH, DEFAULTDAY)
 
 def process_tags(args, options, tagdatabase, trackdatabase):
 
@@ -50,6 +59,8 @@ def process_tags(args, options, tagdatabase, trackdatabase):
     # lookup records are unique
     # state is not maintained across tag_update/track records to save memory - the db is checked for duplicates on insert
 
+    print "Processing tags"
+
     db2 = sqlite3.connect(trackdatabase)
     db2.execute("PRAGMA synchronous = 0;")
     cs2 = db2.cursor()
@@ -57,8 +68,10 @@ def process_tags(args, options, tagdatabase, trackdatabase):
     if tagdatabase == trackdatabase:
         db1 = sqlite3.connect(tagdatabase)
         cs1 = db1.cursor()
-        cs1.execute("attach '' as temptagsupdate")
-        cs1.execute("""create table temptagsupdate.tags_update as select * from tags_update""") 
+        cs1.execute("attach '' as tempdb")
+        cs1.execute("""create table tempdb.tags_update as select * from tags_update""")
+        cs1.execute("""create table tempdb.tags as select * from tags""")
+        cs1.execute("""create table tempdb.workvirtuals_update as select * from workvirtuals_update""")
     else:
         db1 = sqlite3.connect(tagdatabase)
         cs1 = db1.cursor()
@@ -250,10 +263,44 @@ def process_tags(args, options, tagdatabase, trackdatabase):
 
             # process tag records that exist for this scan
             if tagdatabase != trackdatabase:
+                # TODO - regen for workvirtuals_update
                 statement = """select * from tags_update where scannumber=? order by %s""" % orderby
             else:
-                statement = """select * from temptagsupdate.tags_update where scannumber=? order by %s""" % orderby
-            cs1.execute(statement, (scan_id, ))
+#                statement = """select * from tempdb.tags_update where scannumber=? order by %s""" % orderby
+                # we need to process tags_updates followed by workvirtuals updates
+                # to get the full data for workvirtuals updates we join with tags (not tags_updates as it
+                # doesn't contain all the records we need (tags is the after image too))
+                statement = '''
+                            select * from (
+                                select *, '', 'album' from tempdb.tags_update where scannumber=? order by updatetype, rowid
+                            ) first
+
+                            union all
+
+                            select * from (
+                                select t.id, t.id2,
+                                        t.title, w.artist, w.title,
+                                        w.genre, w.track, w.year ,
+                                        w.albumartist, w.composer, t.codec ,
+                                        t.length, t.size ,
+                                        w.created, t.path, t.filename ,
+                                        w.discnumber, t.comment, 
+                                        t.folderart, t.trackart ,
+                                        t.bitrate, t.samplerate, 
+                                        t.bitspersample, t.channels, t.mime ,
+                                        w.lastmodified, t.upnpclass ,
+                                        w.scannumber, t.folderartid, t.trackartid ,
+                                        w.inserted, w.lastscanned ,
+                                        w.updateorder, w.updatetype,
+                                        t.album, w.type
+                                from tempdb.workvirtuals_update w left outer join tempdb.tags t
+                                on t.id = w.id
+                                where w.scannumber=?
+                                order by w.updatetype, w.rowid
+                            ) second
+                            '''
+ 
+            cs1.execute(statement, (scan_id, scan_id))
 
             for row0 in cs1:
 
@@ -270,8 +317,8 @@ def process_tags(args, options, tagdatabase, trackdatabase):
                     sys.stderr.flush()
                     processing_count += 1
 
-                o_id, o_id2, o_title, o_artistliststring, o_album, o_genreliststring, o_tracknumber, o_year, o_albumartistliststring, o_composerliststring, o_codec, o_length, o_size, o_created, o_path, o_filename, o_discnumber, o_commentliststring, o_folderart, o_trackart, o_bitrate, o_samplerate, o_bitspersample, o_channels, o_mime, o_lastmodified, o_upnpclass, o_scannumber, o_folderartid, o_trackartid, o_inserted, o_lastscanned, o_updateorder, o_updatetype = row0
-                id, id2, title, artistliststring, album, genreliststring, tracknumber, year, albumartistliststring, composerliststring, codec, length, size, created, path, filename, discnumber, commentliststring, folderart, trackart, bitrate, samplerate, bitspersample, channels, mime, lastmodified, upnpclass, scannumber, folderartid, trackartid, inserted, lastscanned, updateorder, updatetype = row1
+                o_id, o_id2, o_title, o_artistliststring, o_album, o_genreliststring, o_tracknumber, o_year, o_albumartistliststring, o_composerliststring, o_codec, o_length, o_size, o_created, o_path, o_filename, o_discnumber, o_commentliststring, o_folderart, o_trackart, o_bitrate, o_samplerate, o_bitspersample, o_channels, o_mime, o_lastmodified, o_upnpclass, o_scannumber, o_folderartid, o_trackartid, o_inserted, o_lastscanned, o_updateorder, o_updatetype, o_originalalbum, o_albumtypestring = row0
+                id, id2, title, artistliststring, album, genreliststring, tracknumber, year, albumartistliststring, composerliststring, codec, length, size, created, path, filename, discnumber, commentliststring, folderart, trackart, bitrate, samplerate, bitspersample, channels, mime, lastmodified, upnpclass, scannumber, folderartid, trackartid, inserted, lastscanned, updateorder, updatetype, originalalbum, albumtypestring = row1
                 o_filespec = os.path.join(o_path, o_filename)
                 filespec = os.path.join(path, filename)
 
@@ -280,10 +327,10 @@ def process_tags(args, options, tagdatabase, trackdatabase):
                 if float(this_scan_stamp) > last_scan_stamp:
                     last_scan_stamp = float(this_scan_stamp)
 
-                # default virtual albums and work to not being present
-                notfound = ''
-                o_work_entries = o_virtual_entries = []
-                work_entries = virtual_entries = []
+#                # default virtual albums and work to not being present
+#                notfound = ''
+#                o_work_entries = o_virtual_entries = []
+#                work_entries = virtual_entries = []
 
                 # update type shows how to process
                 # if 'I' is a new file
@@ -294,7 +341,7 @@ def process_tags(args, options, tagdatabase, trackdatabase):
                 o_artistlist = []
                 o_albumartistlist = []
                 o_composerlist = []
-                
+
                 if updatetype == 'D' or updatetype == 'U':
                 
                     # separate out multi-entry lists
@@ -327,8 +374,8 @@ def process_tags(args, options, tagdatabase, trackdatabase):
                         o_albumartistliststring = o_artistliststring
                         o_albumartistlist = o_artistlist
 
-                    # create work and virtual entries if they exist
-                    o_work_entries, o_virtual_entries = getworkvirtualentries(o_commentliststring, o_tracknumber)
+#                    # create work and virtual entries if they exist
+#                    o_work_entries, o_virtual_entries = getworkvirtualentries(o_commentliststring, o_tracknumber)
 
                 genrelist = []
                 artistlist = []
@@ -367,13 +414,15 @@ def process_tags(args, options, tagdatabase, trackdatabase):
                         albumartistliststring = artistliststring
                         albumartistlist = artistlist
 
-                    # create work and virtual entries if they exist
-                    work_entries, virtual_entries = getworkvirtualentries(commentliststring, tracknumber)
+#                    # create work and virtual entries if they exist
+#                    work_entries, virtual_entries = getworkvirtualentries(commentliststring, tracknumber)
 
                 # process track
 
-                # for update/delete need track id
-                if updatetype == 'D' or updatetype == 'U':
+                # don't process track table if work or virtual                
+                if albumtypestring != 'album':
+
+                    # for work/virtual need track id
                     try:
                         cs2.execute("""select id, duplicate from tracks where path=? and filename=?""",
                                     (o_path, o_filename))
@@ -385,102 +434,117 @@ def process_tags(args, options, tagdatabase, trackdatabase):
                     except sqlite3.Error, e:
                         print "Error getting track id:", e.args[0]
 
-                if updatetype == 'D':
-                    try:
-                        if options.verbose:
-                            print "DELETE TRACK: " + str(row0)
-                        cs2.execute("""delete from tracks where id=?""", (track_id,))
-                    except sqlite3.Error, e:
-                        print "Error deleting track details:", e.args[0]
-                
-                elif updatetype == 'I':
-                
-                    # new track, so insert
-                    duplicate = 0   # used if a track is duplicated, for both the track and the album
-                    try:
-                        tracks = (id, id2, track_parentid, duplicate, title, artistliststring, album, genreliststring, tracknumber, year, albumartistliststring, composerliststring, codec, length, size, created, path, filename, discnumber, commentliststring, folderart, trackart, bitrate, samplerate, bitspersample, channels, mime, lastmodified, upnpclass, folderartid, trackartid, inserted, '', '', lastscanned)
-                        if options.verbose:
-                            print "INSERT TRACK: " + str(tracks)
-                        cs2.execute('insert into tracks values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', tracks)
-                    except sqlite3.Error, e:
-                        # assume we have a duplicate
-                        # Sonos doesn't like duplicate names, so append a number and keep trying
-                        
-                        # EXPERIMENTAL
-                        
-                        tstring = title + " (%"
+                else:
+
+                    # for update/delete need track id
+                    if updatetype == 'D' or updatetype == 'U':
                         try:
-                            cs2.execute("""select max(duplicate) from tracks where title like ? and album=? and artist=? and tracknumber=?""",
-                                        (tstring, album, artistliststring, tracknumber))
+                            cs2.execute("""select id, duplicate from tracks where path=? and filename=?""",
+                                        (o_path, o_filename))
                             row = cs2.fetchone()
+                            if row:
+                                track_id, o_duplicate = row
+                                # duplicate won't exist in new data for an update, so force it
+                                duplicate = o_duplicate
                         except sqlite3.Error, e:
-                            print "Error finding max duplicate on track insert"
-                            print e
-                        if row:
-                            tduplicate, = row
-                            # special case for second entry - first won't have been matched
-                            if not tduplicate:
-                                tcount = 2
-                            else:
-                                tcount = int(tduplicate) + 1
-                            tstring = title + " (" + str(tcount) + ")"            
-                            tracks = (id, id2, track_parentid, tcount, tstring, artistliststring, album, genreliststring, tracknumber, year, albumartistliststring, composerliststring, codec, length, size, created, path, filename, discnumber, commentliststring, folderart, trackart, bitrate, samplerate, bitspersample, channels, mime, lastmodified, upnpclass, folderartid, trackartid, inserted, '', '', lastscanned)
+                            print "Error getting track id:", e.args[0]
+
+                    if updatetype == 'D':
+                        try:
                             if options.verbose:
-                                print "INSERT TRACK: " + str(tracks)
-                            try:
-                                cs2.execute('insert into tracks values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', tracks)
-                                duplicate = tcount
-                            except sqlite3.Error, e:
-                                print "Error performing duplicate processing on track insert"
-                                
-                        '''                        
-                        tcount = 2
-                        while True:
-                            tstring = title + " (" + str(tcount) + ")"            
-                            tracks = (id, id2, track_parentid, tcount, tstring, artistliststring, album, genreliststring, tracknumber, year, albumartistliststring, composerliststring, codec, length, size, created, path, filename, discnumber, commentliststring, folderart, trackart, bitrate, samplerate, bitspersample, channels, mime, lastmodified, upnpclass, folderartid, trackartid, inserted, '', '', lastscanned)
-                            if options.verbose:
-                                print "INSERT TRACK: " + str(tracks)
-                            try:
-                                cs2.execute('insert into tracks values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', tracks)
-                                duplicate = tcount
-                                break
-                            except sqlite3.Error, e:
-                                tcount += 1
-                        '''
-
-                        # EXPERIMENTAL
-
-#                    track_id = cs2.lastrowid
-                    track_id = id
-
-                elif updatetype == 'U':
+                                print "DELETE TRACK: " + str(row0)
+                            cs2.execute("""delete from tracks where id=?""", (track_id,))
+                        except sqlite3.Error, e:
+                            print "Error deleting track details:", e.args[0]
                     
-                    # existing track, so update track with changes
-                    try:
-                        # recreate title if duplicate
-                        if o_duplicate != 0:
-                            title = title + " (" + str(o_duplicate) + ")"            
+                    elif updatetype == 'I':
+                    
+                        # new track, so insert
+                        duplicate = 0   # used if a track is duplicated, for both the track and the album
+                        try:
+                            tracks = (id, id2, track_parentid, duplicate, title, artistliststring, album, genreliststring, tracknumber, year, albumartistliststring, composerliststring, codec, length, size, created, path, filename, discnumber, commentliststring, folderart, trackart, bitrate, samplerate, bitspersample, channels, mime, lastmodified, upnpclass, folderartid, trackartid, inserted, '', '', lastscanned)
+                            if options.verbose:
+                                print "INSERT TRACK: " + str(tracks)
+                            cs2.execute('insert into tracks values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', tracks)
+                        except sqlite3.Error, e:
+                            # assume we have a duplicate
+                            # Sonos doesn't like duplicate names, so append a number and keep trying
+                            
+                            # EXPERIMENTAL
+                            
+                            tstring = title + " (%"
+                            try:
+                                cs2.execute("""select max(duplicate) from tracks where title like ? and album=? and artist=? and tracknumber=?""",
+                                            (tstring, album, artistliststring, tracknumber))
+                                row = cs2.fetchone()
+                            except sqlite3.Error, e:
+                                print "Error finding max duplicate on track insert"
+                                print e
+                            if row:
+                                tduplicate, = row
+                                # special case for second entry - first won't have been matched
+                                if not tduplicate:
+                                    tcount = 2
+                                else:
+                                    tcount = int(tduplicate) + 1
+                                tstring = title + " (" + str(tcount) + ")"            
+                                tracks = (id, id2, track_parentid, tcount, tstring, artistliststring, album, genreliststring, tracknumber, year, albumartistliststring, composerliststring, codec, length, size, created, path, filename, discnumber, commentliststring, folderart, trackart, bitrate, samplerate, bitspersample, channels, mime, lastmodified, upnpclass, folderartid, trackartid, inserted, '', '', lastscanned)
+                                if options.verbose:
+                                    print "INSERT TRACK: " + str(tracks)
+                                try:
+                                    cs2.execute('insert into tracks values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', tracks)
+                                    duplicate = tcount
+                                except sqlite3.Error, e:
+                                    print "Error performing duplicate processing on track insert - %s" % e
+                                    
+                            '''                        
+                            tcount = 2
+                            while True:
+                                tstring = title + " (" + str(tcount) + ")"            
+                                tracks = (id, id2, track_parentid, tcount, tstring, artistliststring, album, genreliststring, tracknumber, year, albumartistliststring, composerliststring, codec, length, size, created, path, filename, discnumber, commentliststring, folderart, trackart, bitrate, samplerate, bitspersample, channels, mime, lastmodified, upnpclass, folderartid, trackartid, inserted, '', '', lastscanned)
+                                if options.verbose:
+                                    print "INSERT TRACK: " + str(tracks)
+                                try:
+                                    cs2.execute('insert into tracks values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', tracks)
+                                    duplicate = tcount
+                                    break
+                                except sqlite3.Error, e:
+                                    tcount += 1
+                            '''
 
-                        tracks = (id2, title, artistliststring, album, genreliststring, tracknumber, year, albumartistliststring, composerliststring, codec, length, size, created, discnumber, commentliststring, folderart, trackart, bitrate, samplerate, bitspersample, channels, mime, lastmodified, upnpclass, folderartid, trackartid, inserted, lastscanned, track_id)
-                        if options.verbose:
-                            print "UPDATE TRACK: " + str(tracks)
-                        cs2.execute("""update tracks set 
-                                       id2=?, title=?, artist=?, album=?, 
-                                       genre=?, tracknumber=?, year=?, 
-                                       albumartist=?, composer=?, codec=?, 
-                                       length=?, size=?, 
-                                       created=?, 
-                                       discnumber=?, comment=?, 
-                                       folderart=?, trackart=?,
-                                       bitrate=?, samplerate=?, 
-                                       bitspersample=?, channels=?, mime=?,
-                                       lastmodified=?, upnpclass=?,
-                                       folderartid=?, trackartid=?,
-                                       inserted=?, lastscanned=? 
-                                       where id=?""", 
-                                       tracks)
-                    except sqlite3.Error, e:
-                        print "Error updating track details:", e.args[0]
+                            # EXPERIMENTAL
+
+    #                    track_id = cs2.lastrowid
+                        track_id = id
+
+                    elif updatetype == 'U':
+                        
+                        # existing track, so update track with changes
+                        try:
+                            # recreate title if duplicate
+                            if o_duplicate != 0:
+                                title = title + " (" + str(o_duplicate) + ")"            
+
+                            tracks = (id2, title, artistliststring, album, genreliststring, tracknumber, year, albumartistliststring, composerliststring, codec, length, size, created, discnumber, commentliststring, folderart, trackart, bitrate, samplerate, bitspersample, channels, mime, lastmodified, upnpclass, folderartid, trackartid, inserted, lastscanned, track_id)
+                            if options.verbose:
+                                print "UPDATE TRACK: " + str(tracks)
+                            cs2.execute("""update tracks set 
+                                           id2=?, title=?, artist=?, album=?, 
+                                           genre=?, tracknumber=?, year=?, 
+                                           albumartist=?, composer=?, codec=?, 
+                                           length=?, size=?, 
+                                           created=?, 
+                                           discnumber=?, comment=?, 
+                                           folderart=?, trackart=?,
+                                           bitrate=?, samplerate=?, 
+                                           bitspersample=?, channels=?, mime=?,
+                                           lastmodified=?, upnpclass=?,
+                                           folderartid=?, trackartid=?,
+                                           inserted=?, lastscanned=? 
+                                           where id=?""", 
+                                           tracks)
+                        except sqlite3.Error, e:
+                            print "Error updating track details:", e.args[0]
 
                 # artist - one instance for all tracks from the album with the same artist/albumartist, with multi entry strings concatenated
 
@@ -554,6 +618,7 @@ def process_tags(args, options, tagdatabase, trackdatabase):
                     except sqlite3.Error, e:
                         print "Error inserting artist details:", e.args[0]
 
+                '''
                 # create list of album names to process
                 # Note:
                 #     As the user can specify multiple work and virtual names per track, we don't
@@ -564,6 +629,12 @@ def process_tags(args, options, tagdatabase, trackdatabase):
                 #     For normal albums, there will be a matching pair (unless it's an insert/delete),
                 #     but we process those as a delete and an insert too for consistency.
                 #
+                '''
+                
+                # Note:
+                #     work and virtual entries come in as separate rows
+                #     there can be multiple work and virtual names per track
+                
                 
                 # For normal albums we want to set the album details from the lowest track number.
                 # Really we expect that to be 1, but it won't be if the album is incomplete
@@ -579,70 +650,107 @@ def process_tags(args, options, tagdatabase, trackdatabase):
                 # tracknumbers as for albums
                 
                 albumlist = []
-                
+                structures = []
+
                 if updatetype != 'I':
-                    albumlist.append((o_tracknumber, o_album, 0, 'album', 'old'))
+                    if albumtypestring == 'album':
+                        albumlist.append((o_tracknumber, o_album, 0, albumtypestring, 'old'))
+                    elif albumtypestring == 'work':
+                        structures.append((old_structures_work, o_tracknumber, 'old'))
+                        o_work = o_album
+                    elif albumtypestring == 'virtual':
+                        structures.append((old_structures_virtual, o_tracknumber, 'old'))
+                        o_virtual = o_album
                 if updatetype != 'D':
-                    albumlist.append((tracknumber, album, 0, 'album', 'new'))
-                o_originalalbum = o_album
-                originalalbum = album
+                    if albumtypestring == 'album':
+                        albumlist.append((tracknumber, album, 0, albumtypestring, 'new'))
+                    elif albumtypestring == 'work':
+                        structures.append((new_structures_work, tracknumber, 'new'))
+                        work = album
+                    elif albumtypestring == 'virtual':
+                        structures.append((new_structures_virtual, tracknumber, 'new'))
+                        virtual = album
 
-                # create combinaton lists
-                o_artistlisttmp = o_artistlist if o_artistlist != [] else ['']
-                artistlisttmp = artistlist if artistlist != [] else ['']
-                o_albumartistlisttmp = o_albumartistlist if o_albumartistlist != [] else ['']
-                albumartistlisttmp = albumartistlist if albumartistlist != [] else ['']
-                o_composerlisttmp = o_composerlist if o_composerlist != [] else ['']
-                composerlisttmp = composerlist if composerlist != [] else ['']
-                o_genrelisttmp = o_genrelist if o_genrelist != [] else ['']
-                genrelisttmp = genrelist if genrelist != [] else ['']
+#                o_originalalbum = o_album
+#                originalalbum = album
 
-                # concatenate work and virtual entries
-                entries = []
-                for (number, string) in o_work_entries:
-                    entries.append((number, string, 'work', 'old'))
-                for (number, string) in o_virtual_entries:
-                    entries.append((number, string, 'virtual', 'old'))
-                for (number, string) in work_entries:
-                    entries.append((number, string, 'work', 'new'))
-                for (number, string) in virtual_entries:
-                    entries.append((number, string, 'virtual', 'new'))
+                if albumtypestring != 'album':
 
-                # process work and virtual entries
-                for (number, string, wvtype, oldnew) in entries:
+                    # this is a work or a virtual
 
-                    # set relevant structure to use
-                    if oldnew == 'old' and wvtype == 'work':
-                        structures = old_structures_work
-                        o_work = string
-                    elif oldnew == 'old' and wvtype == 'virtual':
-                        structures = old_structures_virtual
-                        o_virtual = string
-                    elif oldnew == 'new' and wvtype == 'work':
-                        structures = new_structures_work
-                        work = string
-                    elif oldnew == 'new' and wvtype == 'virtual':
-                        structures = new_structures_virtual
-                        virtual = string
+                    # create combinaton lists
+                    o_artistlisttmp = o_artistlist if o_artistlist != [] else ['']
+                    artistlisttmp = artistlist if artistlist != [] else ['']
+                    o_albumartistlisttmp = o_albumartistlist if o_albumartistlist != [] else ['']
+                    albumartistlisttmp = albumartistlist if albumartistlist != [] else ['']
+                    o_composerlisttmp = o_composerlist if o_composerlist != [] else ['']
+                    composerlisttmp = composerlist if composerlist != [] else ['']
+                    o_genrelisttmp = o_genrelist if o_genrelist != [] else ['']
+                    genrelisttmp = genrelist if genrelist != [] else ['']
 
                     # create entries for each relevant structure
-                    for entry_string, entry_value in structures:
+                    for structure, wvnumber, wvtype in structures:
+                    
+                        print structure
+                        print wvnumber
+                        print wvtype
+                    
+                        for entry_string, entry_value in structure:
 
-                        # process every combination (as we don't know what replacements are in the entry_string)
-                        used = []
-                        for o_artist in o_artistlisttmp:
-                            for artist in artistlisttmp:
-                                for o_albumartist in o_albumartistlisttmp:
-                                    for albumartist in albumartistlisttmp:
-                                        for o_composer in o_composerlisttmp:
-                                            for composer in composerlisttmp:
-                                                for o_genre in o_genrelisttmp:
-                                                    for genre in genrelisttmp:
-                                                        entry = eval(entry_string).strip()
-                                                        entry_tuple = (number, entry, entry_value, wvtype, oldnew)
-                                                        if entry_tuple not in used:
-                                                            albumlist.append(entry_tuple)
-                                                            used.append(entry_tuple)
+                            print entry_string
+                            print entry_value
+
+                            # process every combination (as we don't know what replacements are in the entry_string)
+                            used = []
+                            for o_artist in o_artistlisttmp:
+                                for artist in artistlisttmp:
+                                    for o_albumartist in o_albumartistlisttmp:
+                                        for albumartist in albumartistlisttmp:
+                                            for o_composer in o_composerlisttmp:
+                                                for composer in composerlisttmp:
+                                                    for o_genre in o_genrelisttmp:
+                                                        for genre in genrelisttmp:
+                                                            entry = eval(entry_string).strip()
+                                                            entry_tuple = (wvnumber, entry, entry_value, albumtypestring, wvtype)
+                                                            if entry_tuple not in used:
+                                                                albumlist.append(entry_tuple)
+                                                                used.append(entry_tuple)
+
+#                # concatenate work and virtual entries
+#                entries = []
+#                for (number, string) in o_work_entries:
+#                    entries.append((number, string, 'work', 'old'))
+#                for (number, string) in o_virtual_entries:
+#                    entries.append((number, string, 'virtual', 'old'))
+#                for (number, string) in work_entries:
+#                    entries.append((number, string, 'work', 'new'))
+#                for (number, string) in virtual_entries:
+#                    entries.append((number, string, 'virtual', 'new'))
+
+#                # process work and virtual entries
+#                for (number, string, wvtype, oldnew) in entries:
+
+#                    # set relevant structure to use
+#                    if oldnew == 'old' and wvtype == 'work':
+#                        structures = old_structures_work
+#                        o_work = string
+#                    elif oldnew == 'old' and wvtype == 'virtual':
+#                        structures = old_structures_virtual
+#                        o_virtual = string
+#                    elif oldnew == 'new' and wvtype == 'work':
+#                        structures = new_structures_work
+#                        work = string
+#                    elif oldnew == 'new' and wvtype == 'virtual':
+#                        structures = new_structures_virtual
+#                        virtual = string
+
+
+
+
+#need to make sure that old and new entries only contain the values from workvirtuals_update                    
+
+
+
 
                 # set art at album level
                 if folderart and folderart != '' or prefer_folderart:
@@ -654,6 +762,8 @@ def process_tags(args, options, tagdatabase, trackdatabase):
                 else:
                     cover = ''
                     artid = ''
+
+                print albumlist
 
                 # process album names
                 for (album_tracknumber, album_entry, albumvalue_entry, albumtype_entry, albumoldnew_entry) in albumlist:
@@ -716,6 +826,15 @@ def process_tags(args, options, tagdatabase, trackdatabase):
                                         row = cs2.fetchone()
                                         if row:
                                             n_year, n_folderart, n_trackart, n_folderartid, n_trackartid, n_inserted, n_composer, n_created, n_lastmodified = row
+					else:
+					    n_folderart = ''
+					    n_trackart = ''
+					    n_year = ''
+					    n_inserted = ''
+					    n_composer = ''
+					    n_created = ''
+					    n_lastmodified = ''
+
                                     except sqlite3.Error, e:
                                         print "Error getting track details:", e.args[0]
 
@@ -1130,10 +1249,6 @@ def process_tags(args, options, tagdatabase, trackdatabase):
                             # insert base record
                             if composer_change:
 #                                composer_id = prev_composer_id
-
-#TEST THESE CHANGES.....
-
-
                                 composer_id = None
                             else:
                                 composer_id = None
@@ -1243,8 +1358,11 @@ def process_tags(args, options, tagdatabase, trackdatabase):
             cs2.execute("""delete from scans where id=? and scanpath=?""", delete)
             delete = (scan_id, )
             if options.verbose:
-                print "DELETE UPDATES: " + str(delete)
+                print "DELETE TAGS UPDATES: " + str(delete)
             cs2.execute("""delete from tags_update where scannumber=?""", delete)
+            if options.verbose:
+                print "DELETE WORKVIRTUALS UPDATES: " + str(delete)
+            cs2.execute("""delete from workvirtuals_update where scannumber=?""", delete)
         except sqlite3.Error, e:
             print "Error deleting scan/update details:", e.args[0]
 
@@ -1263,6 +1381,8 @@ def process_tags(args, options, tagdatabase, trackdatabase):
 
     db2.commit()
     cs2.close()
+
+    print "Tags processed"
 
     if options.verbose:
         print "finished"
@@ -1311,25 +1431,13 @@ def process_list_the(plist, the_processing):
             newlist.append(entry)
     return newlist
 
-def adjust_tracknumber(tracknumber):
-    # adjust tracknumber so that it's numeric (but save empty string if not)
-    if not tracknumber:
-        tracknumber = ''
-    else:
-        tracknumber = tracknumber.strip()
-        if tracknumber != '':
-            try:
-                tracknumber = int(re.split('\D', tracknumber)[0])
-            except ValueError:
-                tracknumber = ''
-            except AttributeError:
-                tracknumber = ''
-    return tracknumber
-
 def adjust_year(year, filespec):
-    # adjust year so that it is cccc
+    # convert year to ordinal date
+    ordinal = None
     try:
-        cccc = parsedate(year, default=" ").year
+        yeardatetime = parsedate(year, default=DEFAULTDATE)
+        if yeardatetime.year != 1:
+            ordinal = yeardatetime.toordinal()
     except Exception:
         # don't really care why parsedate failed
         # have another go at finding the century
@@ -1342,32 +1450,17 @@ def adjust_year(year, filespec):
                 break
         if not cccc:
             warningstring = "Warning processing track: %s : tag: %s : %s" % (filespec, year, "Couldn't convert year tag to cccc, year tag ignored")
-            print warningstring.encode(enc, 'replace')
             write_warning(warningstring)
-        if cccc == 0: cccc = None
-    return cccc
+        else:
+            yeardate = datetime.date(cccc, DEFAULTMONTH, DEFAULTDAY)
+            ordinal = yeardate.toordinal()
+    return ordinal
 
 def write_warning(warningstring):
-    codecs.open(MUTAGEN_WARNING_FILE,'a','utf-8').write('%s\n' % warningstring)
+    if G_VERBOSE:
+        print warningstring.encode(enc, 'replace')
+    wfile.write('%s\n' % warningstring)
 
-def truncate_number(number):
-    # find integer portion of number passed as string
-    if not number:
-        number = 0
-    else:
-        number = number.strip()
-        numberparts = re.split('\D', number)
-        if numberparts[0] == '':
-            number = 0
-        else:
-            try:
-                number = int(numberparts[0])
-            except ValueError:
-                number = 0
-            except AttributeError:
-                number = 0
-    return number
-    
 def splitworkvirtual(workstring):
     workstring = workstring.strip()
     worknumber = None
@@ -1389,6 +1482,7 @@ work_sep = 'work='
 virtual_sep = 'virtual='
 wv_sep = '(%s|%s)' % (work_sep, virtual_sep)
 
+'''
 def getworkvirtualentries(liststring, tracknumber):
     work_strings = []
     virtual_strings = []
@@ -1407,6 +1501,7 @@ def getworkvirtualentries(liststring, tracknumber):
                     number = tracknumber
                 virtual_strings.append((number, string))
     return work_strings, virtual_strings        
+'''
 
 def translatealbumtype(albumtype):
     if albumtype == 'album':
@@ -1612,6 +1707,9 @@ INSERT INTO sorts (proxyname, controller, sort_type, sort_seq, sort_order, sort_
             c.execute('''create index inxTrackAlbums on tracks (album)''')
             c.execute('''create index inxTrackAlbumDups on tracks (album, duplicate)''')
 #            c.execute('''create index inxTrackAlbumDupTrackTitles on tracks (album, duplicate, tracknumber, title)''')
+
+            c.execute('''create index inxTrackAlbumDiscTrackTitles on tracks (album, discnumber, tracknumber, title)''')
+            c.execute('''create index inxTrackDiscTrackTitles on tracks (discnumber, tracknumber, title)''')
             c.execute('''create index inxTrackArtists on tracks (artist)''')
             c.execute('''create index inxTrackAlbumArtists on tracks (albumartist)''')
             c.execute('''create index inxTrackComposers on tracks (composer)''')
@@ -1961,7 +2059,11 @@ def process_command_line(argv):
     return settings, args
 
 def main(argv=None):
+    global G_QUIET
+    global G_VERBOSE
     options, args = process_command_line(argv)
+    G_QUIET = options.quiet
+    G_VERBOSE = options.verbose
     if len(args) != 0 or not options.tagdatabase or not options.trackdatabase: 
         print "Usage: %s [options]" % sys.argv[0]
     else:
@@ -1974,9 +2076,8 @@ def main(argv=None):
         if options.regenerate:
             empty_database(trackdatabase)
         check_target_database_exists(trackdatabase)
-        open(MUTAGEN_WARNING_FILE,'w').write("")
         process_tags(args, options, tagdatabase, trackdatabase)
-
+    wfile.close()
     return 0
 
 if __name__ == "__main__":

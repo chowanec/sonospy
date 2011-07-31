@@ -23,6 +23,7 @@ import sys
 import os
 import re
 import time
+import datetime
 import ConfigParser
 import sqlite3
 
@@ -1090,7 +1091,7 @@ class DummyContentDirectory(Service):
         suffix_end, self.chunk_metadata_delimiter_suffix_end = self.get_delim('chunk_metadata_delimiter_suffix_end', ']', self.suffix_sep)
 
         missing, self.chunk_metadata_empty = self.get_delim('chunk_metadata_empty', '_', self.prefix_sep)
-        dateformat, self.chunk_metadata_date_format = self.get_delim('chunk_metadata_date_format', '%d/%m/%y', self.prefix_sep)
+        dateformat, self.chunk_metadata_date_format = self.get_delim('chunk_metadata_date_format', '%d/%m/%Y', self.prefix_sep)
 
         self.searchre_pre = '%s[^%s]*%s' % (prefix_start, prefix_end, prefix_end)
         if not suffix_end:
@@ -1272,19 +1273,27 @@ class DummyContentDirectory(Service):
 
             if album_type != 10:
                 # is a work or a virtual album
-                statement = '''select * from tracks t, tracknumbers n where id in
+#                statement = '''select * from tracks t, tracknumbers n where id in
+#                               (select track_id from TrackNumbers where %s)
+#                               and t.id = n.track_id and t.genre=n.genre and t.artist=n.artist and t.albumartist=n.albumartist and t.album=n.album and t.composer=n.composer and t.duplicate=n.duplicate and n.albumtype=%s and n.dummyalbum="%s"
+#                               order by t.discnumber, n.tracknumber, t.title''' % (where, album_type, album_title)
+
+                statement = '''
+                                select * from tracks t join tracknumbers n on t.id = n.track_id where id in
                                (select track_id from TrackNumbers where %s)
-                               and t.id = n.track_id and t.genre=n.genre and t.artist=n.artist and t.albumartist=n.albumartist and t.album=n.album and t.composer=n.composer and t.duplicate=n.duplicate and n.albumtype=%s and n.dummyalbum="%s"
-                               order by n.tracknumber, t.title''' % (where, album_type, album_title)
+                                and n.albumtype=%s and n.dummyalbum="%s"
+                                order by n.tracknumber, t.title
+                            ''' % (where, album_type, album_title)
+
                 log.debug("statement: %s", statement)
                 c.execute(statement)
             else:
                 # is a normal album            
-                statement = "select * from tracks where %s order by tracknumber, title" % (where)
+                statement = "select * from tracks where %s order by discnumber, tracknumber, title" % (where)
                 log.debug("statement: %s", statement)
                 c.execute(statement)
             for row in c:
-                log.debug("row: %s", row)
+#                log.debug("row: %s", row)
                 if album_type != 10:
                     id, id2, parentID, duplicate, title, artist, album, genre, tracknumber, year, albumartist, composer, codec, length, size, created, path, filename, discnumber, comment, folderart, trackart, bitrate, samplerate, bitspersample, channels, mime, lastmodified, upnpclass, folderartid, trackartid, inserted, lastplayed, playcount, lastscanned, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10 = row
                 else:
@@ -1447,13 +1456,15 @@ class DummyContentDirectory(Service):
 
             ret  = '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">'
 
-            rootitems = [('6', 'Artists'),
-                         ('100', 'Contributing Artists'),
+            rootitems = [
                          ('7', 'Albums'),
+                         ('6', 'Artists'),
                          ('108', 'Composers'),
+                         ('100', 'Contributing Artists'),
                          ('5', 'Genres'),
+                         ('F', 'Playlists'),
                          ('99', 'Tracks'),
-                         ('F', 'Playlists')]
+                        ]
 
             for (id, title) in rootitems:
 
@@ -1484,9 +1495,6 @@ class DummyContentDirectory(Service):
 
     def soap_Search(self, *args, **kwargs):
 
-        # TODO
-        # TODO: fix compilations
-        # TODO
         # TODO: fix error conditions (return zero)
 
         controllername = kwargs.get('Controller', '')
@@ -1505,46 +1513,76 @@ class DummyContentDirectory(Service):
         log.debug('searchCriteria: %s' % searchCriteria.encode(enc, 'replace'))
         log.debug("PROXY_SEARCH: %s", kwargs)
 
+        # check if search requested
+#        result = {'SearchCaps': 'Artist,Contributing Artist,Composer,Album,Track,ALL'}
+        searchcontainer = None
+        if searchCriteria.startswith('SEARCH::'):
+            searchtype = searchCriteria[8:].split('::')[0]
+            searchstring = searchCriteria[10+len(searchtype):]
+            searchcontainer = searchtype
+            if searchcontainer == 'Contributing Artist': searchcontainer = 'Artist'
+
         db = sqlite3.connect(os.path.join(os.getcwd(), self.dbname))
         c = db.cursor()
 
         startingIndex = int(kwargs['StartingIndex'])
         requestedCount = int(kwargs['RequestedCount'])
 
-        if (containerID == '107' or containerID == '100') and searchCriteria.startswith('upnp:class = "object.container.person.musicArtist" and @refID exists false'):
+        if ((containerID == '107' or containerID == '100') and searchCriteria.startswith('upnp:class = "object.container.person.musicArtist" and @refID exists false')) or \
+           searchcontainer == 'Artist':
 
             # Artist/Contributing Artist containers
 
             genres = []
             state_pre_suf = []
 
-            if searchCriteria == 'upnp:class = "object.container.person.musicArtist" and @refID exists false':
+            if searchCriteria == 'upnp:class = "object.container.person.musicArtist" and @refID exists false' or \
+               searchcontainer == 'Artist':
                 # Artists
                 log.debug('artists')
                 genres.append('dummy')
                 searchtype = 'ARTIST'
-                if self.use_albumartist and containerID == '107':
-                    artisttype = 'albumartist'
-                    countstatement = "select count(distinct albumartist) from AlbumartistAlbum"
-                    orderbylist = self.get_orderby('ALBUMARTIST', controllername)
-                    for orderbyentry in orderbylist:
-                        orderby, prefix, suffix, albumtype, table, header = orderbyentry
-                        if not orderby or orderby == '':
-                            orderby = 'albumartist'
-                        statement = "select albumartist, lastplayed, playcount from AlbumartistAlbum group by albumartist order by orderby limit ?, ?"
-                        state_pre_suf.append((orderby, prefix, suffix, albumtype, table, header))
-                    id_pre = 'ALBUMARTIST__'
-                else:                
-                    artisttype = 'artist'
-                    countstatement = "select count(distinct artist) from ArtistAlbum"
-                    orderbylist = self.get_orderby('ARTIST', controllername)
+                searchwhere = ''
+                if containerID == '107':
+                    if self.use_albumartist:
+                        artisttype = 'albumartist'
+                        if searchcontainer:
+                            searchwhere = 'where albumartist like "%%%s%%"' % searchstring
+                        countstatement = "select count(distinct albumartist) from AlbumartistAlbum %s" % searchwhere
+                        statement = "select albumartist, lastplayed, playcount from AlbumartistAlbum %s group by albumartist order by orderby limit ?, ?" % searchwhere
+                        orderbylist = self.get_orderby('ALBUMARTIST', controllername)
+                        for orderbyentry in orderbylist:
+                            orderby, prefix, suffix, albumtype, table, header = orderbyentry
+                            if not orderby or orderby == '':
+                                orderby = 'albumartist'
+                            state_pre_suf.append((orderby, prefix, suffix, albumtype, table, header))
+                        id_pre = 'ALBUMARTIST__'
+                    else:                
+                        artisttype = 'artist'
+                        if searchcontainer:
+                            searchwhere = 'where artist like "%%%s%%"' % searchstring
+                        countstatement = "select count(distinct artist) from ArtistAlbum %s" % searchwhere
+                        statement = "select artist, lastplayed, playcount from ArtistAlbum %s group by artist order by orderby limit ?, ?" % searchwhere
+                        orderbylist = self.get_orderby('ARTIST', controllername)
+                        for orderbyentry in orderbylist:                                        
+                            orderby, prefix, suffix, albumtype, table, header = orderbyentry
+                            if not orderby or orderby == '':
+                                orderby = 'artist'
+                            state_pre_suf.append((orderby, prefix, suffix, albumtype, table, header))
+                        id_pre = 'ARTIST__'
+                else:
+                    artisttype = 'contributingartist'
+                    if searchcontainer:
+                        searchwhere = 'where artist like "%%%s%%"' % searchstring
+                    countstatement = "select count(distinct artist) from ArtistAlbum %s" % searchwhere
+                    statement = "select artist, lastplayed, playcount from ArtistAlbum %s group by artist order by orderby limit ?, ?" % searchwhere
+                    orderbylist = self.get_orderby('CONTRIBUTINGARTIST', controllername)
                     for orderbyentry in orderbylist:                                        
                         orderby, prefix, suffix, albumtype, table, header = orderbyentry
                         if not orderby or orderby == '':
                             orderby = 'artist'
-                        statement = "select artist, lastplayed, playcount from ArtistAlbum group by artist order by orderby limit ?, ?"
                         state_pre_suf.append((orderby, prefix, suffix, albumtype, table, header))
-                    id_pre = 'ARTIST__'
+                    id_pre = 'CONTRIBUTINGARTIST__'
             else:
                 criteria = searchCriteria.split('=')
                 if criteria[1].endswith('upnp:genre '):
@@ -1557,26 +1595,26 @@ class DummyContentDirectory(Service):
                         if genre == '[unknown genre]': genre = ''
                         log.debug('    genre: %s', genre)
                         genres.append(genre)
-                        if self.use_albumartist and containerID == '107':
+                        if self.use_albumartist:
                             artisttype = 'albumartist'
                             countstatement = "select count(distinct albumartist) from GenreAlbumartistAlbum where genre=?"
+                            statement = "select albumartist, lastplayed, playcount from GenreAlbumartistAlbum where genre=? group by albumartist order by orderby limit ?, ?"
                             orderbylist = self.get_orderby('GENRE_ALBUMARTIST', controllername)
                             for orderbyentry in orderbylist:                                        
                                 orderby, prefix, suffix, albumtype, table, header = orderbyentry
                                 if not orderby or orderby == '':
                                     orderby = 'albumartist'
-                                statement = "select albumartist, lastplayed, playcount from GenreAlbumartistAlbum where genre=? group by albumartist order by orderby limit ?, ?"
                                 state_pre_suf.append((orderby, prefix, suffix, albumtype, table, header))
                             id_pre = 'GENRE_ALBUMARTIST__'
                         else:                
                             artisttype = 'artist'
                             countstatement = "select count(distinct artist) from GenreArtistAlbum where genre=?"
+                            statement = "select artist, lastplayed, playcount from GenreArtistAlbum where genre=? group by artist order by orderby limit ?, ?"
                             orderbylist = self.get_orderby('GENRE_ARTIST', controllername)
                             for orderbyentry in orderbylist:                                        
                                 orderby, prefix, suffix, albumtype, table, header = orderbyentry
                                 if not orderby or orderby == '':
                                     orderby = 'artist'
-                                statement = "select artist, lastplayed, playcount from GenreArtistAlbum where genre=? group by artist order by orderby limit ?, ?"
                                 state_pre_suf.append((orderby, prefix, suffix, albumtype, table, header))
                             id_pre = 'GENRE_ARTIST__'
                 else:
@@ -1658,9 +1696,6 @@ class DummyContentDirectory(Service):
                     for row in c:
     #                    log.debug("row: %s", row)
 
-    #                    if startingIndex == 0 and count > 100:
-    #                        # hack to get initial display back quicker
-    #                        break
                         artist, lastplayed, playcount = row
                         playcount = str(playcount)
                         if artist == '': artist = '[unknown %s]' % artisttype
@@ -1681,7 +1716,8 @@ class DummyContentDirectory(Service):
 
             res += '</DIDL-Lite>'
 
-        elif containerID == '0' and searchCriteria.startswith('upnp:class = "object.container.album.musicAlbum" and @refID exists false'):
+        elif (containerID == '0' and searchCriteria.startswith('upnp:class = "object.container.album.musicAlbum" and @refID exists false')) or \
+             searchcontainer == 'Album':
 
             # Albums class
 
@@ -1697,77 +1733,66 @@ class DummyContentDirectory(Service):
             fields = []
             state_pre_suf = []
         
-            if searchCriteria == 'upnp:class = "object.container.album.musicAlbum" and @refID exists false':
+            if searchCriteria == 'upnp:class = "object.container.album.musicAlbum" and @refID exists false' or \
+               searchcontainer == 'Album':
                 # Albums
                 log.debug('albums')
                 searchtype = 'ALBUM'
-                # get the sort sequence for this database and query
-                orderbylist = self.get_orderby('ALBUM', controllername)
+
+                albumwhere = self.album_where_duplicate
+                if searchcontainer:
+                    if albumwhere == '':
+                        albumwhere = 'where album like "%%%s%%"' % searchstring
+                    else:
+                        albumwhere += ' and album like "%%%s%%"' % searchstring
+
+                # default albumtype to albums only
+                at = 'albumtype=10'
+
                 genres.append('dummy')     # dummy for albums
                 fields.append('dummy')     # dummy for albums
+
                 if self.use_albumartist:
-                    countstatement = "select count(distinct %s) from albums %s" % (distinct_albumartist, self.album_where_duplicate)
-                    for orderbyentry in orderbylist:
-                        orderby, prefix, suffix, albumtype, table, header = orderbyentry
-                        if not orderby or orderby == '':
-                            orderby = 'album, albumartist'
-                        if table == 'dummy':
-                            # albumtype not set, default to albums only
-                            at = 'albumtype=10'
+                    album_distinct = distinct_albumartist
+                    album_groupby = groupby_albumartist
+                else:
+                    album_distinct = distinct_artist
+                    album_groupby = groupby_artist
+
+                # get the sort sequence for this database and query
+                orderbylist = self.get_orderby('ALBUM', controllername)
+                
+                log.debug(orderbylist)
+
+                # FIXME: this code will use the albumtype from the last entry in the orderbylist
+                
+                for orderbyentry in orderbylist:
+                    orderby, prefix, suffix, albumtype, table, header = orderbyentry
+                    if not orderby or orderby == '':
+                        orderby = 'album, albumartist'
+                    if table != 'dummy':
+                        # albumtype will be a list of albumtypes
+                        if len(albumtype) == 1:
+                            at = 'albumtype = %s' % albumtype[0]
                         else:
-                            # albumtype will be a list of albumtypes
                             at = 'albumtype in (%s)' % ','.join(['%s' % n for n in albumtype])
-                        if self.album_where_duplicate == '':
-                            albumtype_where = 'where %s' % at
-                        else:
-                            albumtype_where = ' and %s' % at
-                        countstatement = "select count(distinct %s) from albums %s%s" % (distinct_albumartist, self.album_where_duplicate, albumtype_where)
+                    if albumwhere == '':
+                        albumwhere = 'where %s' % at
+                    else:
+                        albumwhere += ' and %s' % at
 
-                        if controllername == 'PCDCR':
-                            statement = "select a.* from ( select album, min(tracknumbers) as mintrack, albumtype, duplicate from albums %s%s group by %s ) as m inner join albums as a on a.album = m.album and a.tracknumbers = m.mintrack and a.albumtype = m.albumtype and a.duplicate = m.duplicate order by orderby limit ?, ?" % (self.album_where_duplicate, albumtype_where, groupby_albumartist)
-                        else:
-                            statement = "select * from albums %s%s group by %s order by orderby limit ?, ?" % (self.album_where_duplicate, albumtype_where, groupby_albumartist)
+                    countstatement = "select count(distinct %s) from albums %s" % (album_distinct, albumwhere)
+                    if controllername == 'PCDCR':
+                        statement = "select a.* from ( select album, min(tracknumbers) as mintrack, albumtype, duplicate from albums %s group by %s ) as m inner join albums as a on a.album = m.album and a.tracknumbers = m.mintrack and a.albumtype = m.albumtype and a.duplicate = m.duplicate order by orderby limit ?, ?" % (albumwhere, album_groupby)
+                    else:
+                        statement = "select * from albums %s group by %s order by orderby limit ?, ?" % (albumwhere, album_groupby)
 
-                        '''
-select * from albums  where duplicate = 0 and albumtype in (10,27) group by album order by orderby limit ?, ?
+                    state_pre_suf.append((orderby, prefix, suffix, albumtype, table, header))
 
-select a.* from (
-    select album, min(tracknumbers) as mintrack, albumtype, duplicate 
-    from albums where duplicate = 0 and albumtype in (10,27) group by album
-) as m inner join albums as a on a.album = m.album and a.tracknumbers = m.mintrack and a.albumtype = m.albumtype and a.duplicate = m.duplicate
-order by albumartist limit ?, ?
-                        '''
-
-                        state_pre_suf.append((orderby, prefix, suffix, albumtype, table, header))
-
-                else:                
-                    countstatement = "select count(distinct %s) from albums %s" % (distinct_artist, self.album_where_duplicate)
-                    for orderbyentry in orderbylist:
-                        orderby, prefix, suffix, albumtype, table, header = orderbyentry
-                        if not orderby or orderby == '':
-                            orderby = 'album, artist'
-                        if table == 'dummy':
-                            if self.album_where_duplicate == '':
-                                albumtype_where = 'where albumtype=10'
-                            else:
-                                albumtype_where = ' and albumtype=10'
-                            countstatement = "select count(distinct %s) from albums %s%s" % (distinct_artist, self.album_where_duplicate, albumtype_where)
-
-                            if controllername == 'PCDCR':
-                                statement = "select a.* from ( select album, min(tracknumbers) as mintrack, albumtype, duplicate from albums %s%s group by %s ) as m inner join albums as a on a.album = m.album and a.tracknumbers = m.mintrack and a.albumtype = m.albumtype and a.duplicate = m.duplicate order by orderby limit ?, ?" % (self.album_where_duplicate, albumtype_where, groupby_artist)
-                            else:
-                                statement = "select * from albums %s%s group by %s order by orderby limit ?, ?" % (self.album_where_duplicate, albumtype_where, groupby_artist)
-
-                        else:                        
-
-                            if controllername == 'PCDCR':
-                                statement = "select a.* from ( select album, min(tracknumbers) as mintrack, albumtype, duplicate from albums %s group by %s ) as m inner join albums as a on a.album = m.album and a.tracknumbers = m.mintrack and a.albumtype = m.albumtype and a.duplicate = m.duplicate order by orderby limit ?, ?" % (self.album_where_duplicate, groupby_artist)
-                            else:
-                                statement = "select * from albums %s   group by %s order by orderby limit ?, ?" % (self.album_where_duplicate, groupby_artist)
-                            
-                        state_pre_suf.append((orderby, prefix, suffix, albumtype, table, header))
                 id_pre = 'ALBUM__'
+                
             else:
+            
                 criteria = searchCriteria.split('=')
                 numcrit = len(criteria)
                 if numcrit == 3:
@@ -1778,18 +1803,18 @@ order by albumartist limit ?, ?
                         # Albums for Composer
                         log.debug('albums for composer')
                         composer = criteria[2][1:]
+                        countstatement = "select count(distinct %s) from ComposerAlbum where composer=? and albumtype=? %s" % (distinct_composer, self.album_and_duplicate)
+                        statement = "select * from albums where id in (select album_id from ComposerAlbum where composer=? and albumtype=? %s) group by %s order by orderby limit ?, ?" % (self.album_and_duplicate, groupby_composer)
                         composer_options = self.removepresuf(composer, 'COMPOSER', controllername)
                         for composer in composer_options:
                             if composer == '[unknown composer]': composer = ''
                             log.debug('    composer: %s', composer)
                             fields.append(composer)
-                            countstatement = "select count(distinct %s) from ComposerAlbum where composer=? and albumtype=? %s" % (distinct_composer, self.album_and_duplicate)
                             orderbylist = self.get_orderby('COMPOSER_ALBUM', controllername)
                             for orderbyentry in orderbylist:
                                 orderby, prefix, suffix, albumtype, table, header = orderbyentry
                                 if not orderby or orderby == '':
                                     orderby = 'album'
-                                statement = "select * from albums where id in (select album_id from ComposerAlbum where composer=? and albumtype=? %s) group by %s order by orderby limit ?, ?" % (self.album_and_duplicate, groupby_composer)
                                 state_pre_suf.append((orderby, prefix, suffix, albumtype, table, header))
                             id_pre = 'COMPOSER_ALBUM__'
 
@@ -1798,34 +1823,31 @@ order by albumartist limit ?, ?
                         log.debug('albums for artist (microsoft:artistAlbumArtist)')
                         artist = criteria[2][1:]
                         if self.use_albumartist:
+                            countstatement = "select count(distinct %s) from AlbumartistAlbum where albumartist=? and albumtype=? %s" % (distinct_albumartist, self.album_and_duplicate)
+                            statement = "select * from albums where id in (select album_id from AlbumartistAlbum where albumartist=? and albumtype=? %s) group by %s order by orderby limit ?, ?" % (self.album_and_duplicate, groupby_albumartist)
                             artist_options = self.removepresuf(artist, 'ALBUMARTIST', controllername)
                         else:
+                            countstatement = "select count(distinct %s) from ArtistAlbum where artist=? and albumtype=? %s" % (distinct_artist, self.album_and_duplicate)
+                            statement = "select * from albums where id in (select album_id from ArtistAlbum where artist=? and albumtype=? %s) group by %s order by orderby limit ?, ?" % (self.album_and_duplicate, groupby_artist)
                             artist_options = self.removepresuf(artist, 'ARTIST', controllername)
                         for artist in artist_options:
                             if artist == '[unknown artist]': artist = ''
                             log.debug('    artist: %s', artist)
                             fields.append(artist)
                             if self.use_albumartist:
-                                countstatement = "select count(distinct %s) from AlbumartistAlbum where albumartist=? and albumtype=? %s" % (distinct_albumartist, self.album_and_duplicate)
                                 orderbylist = self.get_orderby('ALBUMARTIST_ALBUM', controllername)
-                                
-                                log.debug(orderbylist)
-                                
                                 for orderbyentry in orderbylist:
                                     orderby, prefix, suffix, albumtype, table, header = orderbyentry
                                     if not orderby or orderby == '':
                                         orderby = 'album'
-                                    statement = "select * from albums where id in (select album_id from AlbumartistAlbum where albumartist=? and albumtype=? %s) group by %s order by orderby limit ?, ?" % (self.album_and_duplicate, groupby_albumartist)
                                     state_pre_suf.append((orderby, prefix, suffix, albumtype, table, header))
                                 id_pre = 'ALBUMARTIST_ALBUM__'
                             else:
-                                countstatement = "select count(distinct %s) from ArtistAlbum where artist=? and albumtype=? %s" % (distinct_artist, self.album_and_duplicate)
                                 orderbylist = self.get_orderby('ARTIST_ALBUM', controllername)
                                 for orderbyentry in orderbylist:
                                     orderby, prefix, suffix, albumtype, table, header = orderbyentry
                                     if not orderby or orderby == '':
                                         orderby = 'album'
-                                    statement = "select * from albums where id in (select album_id from ArtistAlbum where artist=? and albumtype=? %s) group by %s order by orderby limit ?, ?" % (self.album_and_duplicate, groupby_artist)
                                     state_pre_suf.append((orderby, prefix, suffix, albumtype, table, header))
                                 id_pre = 'ARTIST_ALBUM__'
 
@@ -1834,18 +1856,18 @@ order by albumartist limit ?, ?
                         # Albums for contributing artist
                         log.debug('albums for artist (microsoft:artistPerformer)')
                         artist = criteria[2][1:]
+                        countstatement = "select count(distinct %s) from ArtistAlbum where artist=? and albumtype=? %s" % (distinct_artist, self.album_and_duplicate)
+                        statement = "select * from albums where id in (select album_id from ArtistAlbum where artist=? and albumtype=? %s) group by %s order by orderby limit ?, ?" % (self.album_and_duplicate, groupby_artist)
                         artist_options = self.removepresuf(artist, 'CONTRIBUTINGARTIST', controllername)
                         for artist in artist_options:
                             if artist == '[unknown artist]': artist = ''
                             log.debug('    artist: %s', artist)
                             fields.append(artist)
-                            countstatement = "select count(distinct %s) from ArtistAlbum where artist=? and albumtype=? %s" % (distinct_artist, self.album_and_duplicate)
                             orderbylist = self.get_orderby('CONTRIBUTINGARTIST_ALBUM', controllername)
                             for orderbyentry in orderbylist:
                                 orderby, prefix, suffix, albumtype, table, header = orderbyentry
                                 if not orderby or orderby == '':
                                     orderby = 'album'
-                                statement = "select * from albums where id in (select album_id from ArtistAlbum where artist=? and albumtype=? %s) group by %s order by orderby limit ?, ?" % (self.album_and_duplicate, groupby_artist)
                                 state_pre_suf.append((orderby, prefix, suffix, albumtype, table, header))
                             id_pre = 'CONTRIBUTINGARTIST_ALBUM__'
                     else:
@@ -1857,12 +1879,17 @@ order by albumartist limit ?, ?
                         # Albums for genre and artist
                         log.debug('albums for genre and artist')
                         genre = criteria[2][1:-33]
+                        if self.use_albumartist:
+                            countstatement = "select count(distinct %s) from GenreAlbumartistAlbum where genre=? and albumartist=? and albumtype=? %s" % (distinct_albumartist, self.album_and_duplicate)
+                            statement = "select * from albums where id in (select album_id from GenreAlbumartistAlbum where genre=? and albumartist=? and albumtype=? %s) group by %s order by orderby limit ?, ?" % (self.album_and_duplicate, groupby_albumartist)
+                        else:
+                            countstatement = "select count(distinct %s) from GenreArtistAlbum where genre=? and artist=? and albumtype=? %s" % (distinct_artist, self.album_and_duplicate)
+                            statement = "select * from albums where id in (select album_id from GenreArtistAlbum where genre=? and artist=? and albumtype=? %s) group by %s order by orderby limit ?, ?" % (self.album_and_duplicate, groupby_artist)
                         genre_options = self.removepresuf(genre, 'GENRE', controllername)
                         for genre in genre_options:
                             if genre == '[unknown genre]': genre = ''
                             log.debug('    genre: %s', genre)
                             genres.append(genre)
-
                             artist = criteria[3][1:]
                             if self.use_albumartist:
                                 artist_options = self.removepresuf(artist, 'GENRE_ALBUMARTIST', controllername)
@@ -1872,25 +1899,20 @@ order by albumartist limit ?, ?
                                 if artist == '[unknown artist]': artist = ''
                                 log.debug('    artist: %s', artist)
                                 fields.append(artist)
-
                                 if self.use_albumartist:
-                                    countstatement = "select count(distinct %s) from GenreAlbumartistAlbum where genre=? and albumartist=? and albumtype=? %s" % (distinct_albumartist, self.album_and_duplicate)
                                     orderbylist = self.get_orderby('ALBUMARTIST_ALBUM', controllername)
                                     for orderbyentry in orderbylist:
                                         orderby, prefix, suffix, albumtype, table, header = orderbyentry
                                         if not orderby or orderby == '':
                                             orderby = 'album'
-                                        statement = "select * from albums where id in (select album_id from GenreAlbumartistAlbum where genre=? and albumartist=? and albumtype=? %s) group by %s order by orderby limit ?, ?" % (self.album_and_duplicate, groupby_albumartist)
                                         state_pre_suf.append((orderby, prefix, suffix, albumtype, table, header))
                                     id_pre = 'GENRE_ALBUMARTIST_ALBUM__'
                                 else:
-                                    countstatement = "select count(distinct %s) from GenreArtistAlbum where genre=? and artist=? and albumtype=? %s" % (distinct_artist, self.album_and_duplicate)
                                     orderbylist = self.get_orderby('ARTIST_ALBUM', controllername)
                                     for orderbyentry in orderbylist:
                                         orderby, prefix, suffix, albumtype, table, header = orderbyentry
                                         if not orderby or orderby == '':
                                             orderby = 'album'
-                                        statement = "select * from albums where id in (select album_id from GenreArtistAlbum where genre=? and artist=? and albumtype=? %s) group by %s order by orderby limit ?, ?" % (self.album_and_duplicate, groupby_artist)
                                         state_pre_suf.append((orderby, prefix, suffix, albumtype, table, header))
                                     id_pre = 'GENRE_ARTIST_ALBUM__'
 
@@ -1994,10 +2016,6 @@ order by albumartist limit ?, ?
                     for row in c:
 #                        log.debug("row: %s", row)
 
-    #                    if startingIndex == 0 and count > 100:
-    #                        # hack to get initial display back quicker
-    #                        break
-
                         id, parentID, album, artist, year, albumartist, duplicate, cover, artid, inserted, composer, tracknumbers, created, lastmodified, albumtype, lastplayed, playcount, upnpclass = row
                         id = str(id)
                         playcount = str(playcount)
@@ -2060,20 +2078,25 @@ order by albumartist limit ?, ?
                     
             res += '</DIDL-Lite>'
 
-        elif containerID == '108' and searchCriteria == 'upnp:class = "object.container.person.musicArtist" and @refID exists false':
+        elif (containerID == '108' and searchCriteria == 'upnp:class = "object.container.person.musicArtist" and @refID exists false') or \
+             searchcontainer == 'Composer':
 
             # Composer container
 
             state_pre_suf = []
 
-            countstatement = "select count(distinct composer) from ComposerAlbum"
+            searchwhere = ''
+            if searchcontainer:
+                searchwhere = 'where composer like "%%%s%%"' % searchstring
+
+            countstatement = "select count(distinct composer) from ComposerAlbum %s" % searchwhere
+            statement = "select composer, lastplayed, playcount from ComposerAlbum %s group by composer order by orderby limit ?, ?" % searchwhere
 
             orderbylist = self.get_orderby('COMPOSER', controllername)
             for orderbyentry in orderbylist:
                 orderby, prefix, suffix, albumtype, table, header = orderbyentry
                 if not orderby or orderby == '':
                     orderby = 'composer'
-                statement = "select composer, lastplayed, playcount from ComposerAlbum group by composer order by orderby limit ?, ?"
                 state_pre_suf.append((orderby, prefix, suffix, albumtype, table, header))
             id_pre = 'COMPOSER__'
 
@@ -2121,10 +2144,7 @@ order by albumartist limit ?, ?
 
                     c.execute(orderstatement, (start, length))
                     for row in c:
-    #                    log.debug("row: %s", row)
-    #                    if startingIndex == 0 and count > 100:
-    #                        # hack to get initial display back quicker
-    #                        break
+#                        log.debug("row: %s", row)
                         composer, lastplayed, playcount = row
                         if composer == '': composer = '[unknown composer]'
                         composer = escape(composer)
@@ -2156,13 +2176,13 @@ order by albumartist limit ?, ?
             state_pre_suf = []
 
             countstatement = "select count(distinct genre) from GenreArtist"
+            statement = "select genre, lastplayed, playcount from GenreArtist group by genre order by orderby limit ?, ?"
 
             orderbylist = self.get_orderby('GENRE', controllername)
             for orderbyentry in orderbylist:
                 orderby, prefix, suffix, albumtype, table, header = orderbyentry
                 if not orderby or orderby == '':
                     orderby = 'genre'
-                statement = "select genre, lastplayed, playcount from GenreArtist group by genre order by orderby limit ?, ?"
                 state_pre_suf.append((orderby, prefix, suffix, albumtype, table, header))
             id_pre = 'GENRE__'
 
@@ -2206,10 +2226,7 @@ order by albumartist limit ?, ?
 
                     c.execute(orderstatement, (start, length))
                     for row in c:
-    #                    log.debug("row: %s", row)
-                        if startingIndex == 0 and count > 100:
-                            # hack to get initial display back quicker
-                            break
+#                        log.debug("row: %s", row)
                         genre, lastplayed, playcount = row
                         playcount = str(playcount)
 
@@ -2231,7 +2248,8 @@ order by albumartist limit ?, ?
 
             res += '</DIDL-Lite>'
 
-        elif containerID == '0' and searchCriteria.startswith('upnp:class derivedfrom "object.item.audioItem" and @refID exists false'):
+        elif (containerID == '0' and searchCriteria.startswith('upnp:class derivedfrom "object.item.audioItem" and @refID exists false')) or \
+             searchcontainer == 'Track':
 
             # Track class
 
@@ -2240,15 +2258,24 @@ order by albumartist limit ?, ?
             fields = []
             tracks_type = None
             
-            if searchCriteria == 'upnp:class derivedfrom "object.item.audioItem" and @refID exists false':
+            if searchCriteria == 'upnp:class derivedfrom "object.item.audioItem" and @refID exists false' or \
+               searchcontainer == 'Track':
                 # Tracks
                 tracks_type = 'TRACKS'
                 if self.show_duplicates:
                     where = ""
                 else:
                     where = "where duplicate = 0"
-                countstatement = "select count(*) from tracks %s" % where
-                statement = "select * from tracks %s order by title limit %d, %d" % (where, startingIndex, requestedCount)
+
+                searchwhere = where
+                if searchcontainer:
+                    if searchwhere == '':
+                        searchwhere = 'where title like "%%%s%%"' % searchstring
+                    else:
+                        searchwhere += ' and title like "%%%s%%"' % searchstring
+
+                countstatement = "select count(*) from tracks %s" % searchwhere
+                statement = "select * from tracks %s order by title limit %d, %d" % (searchwhere, startingIndex, requestedCount)
 
                 c.execute(countstatement)
                 totalMatches, = c.fetchone()
@@ -2282,6 +2309,8 @@ order by albumartist limit ?, ?
                             # searchCriteria: upnp:class derivedfrom "object.item.audioItem" and @refID exists false and microsoft:authorComposer = "A New Found Glory"
                             log.debug('tracks for composer')
                             composer = criteria[1][1:]
+                            countstatement = "select count(*) from ComposerAlbumTrack where composer=? %s" % (self.album_and_duplicate)
+                            statement = "select * from tracks where id in (select track_id from ComposerAlbumTrack where composer=? %s) order by album, discnumber, tracknumber, title limit %d, %d" % (self.album_and_duplicate, startingIndex, requestedCount)
                             composer_options = self.removepresuf(composer, 'COMPOSER', controllername)
                             for composer in composer_options:
                                 if composer == '[unknown composer]': composer = ''
@@ -2290,8 +2319,6 @@ order by albumartist limit ?, ?
                                     # shouldn't get here
                                     break
                                 log.debug('    composer: %s', composer)
-                                countstatement = "select count(*) from ComposerAlbumTrack where composer=? %s" % (self.album_and_duplicate)
-                                statement = "select * from tracks where id in (select track_id from ComposerAlbumTrack where composer=? %s) order by album, tracknumber, title limit %d, %d" % (self.album_and_duplicate, startingIndex, requestedCount)
 
                         elif criteria[0].endswith('microsoft:artistAlbumArtist '):
 
@@ -2300,8 +2327,12 @@ order by albumartist limit ?, ?
                             log.debug('tracks for artist')
                             artist = criteria[1][1:]
                             if self.use_albumartist:
+                                countstatement = "select count(*) from AlbumartistAlbumTrack where albumartist=? %s" % (self.album_and_duplicate)
+                                statement = "select * from tracks where id in (select track_id from AlbumartistAlbumTrack where albumartist=? %s) order by album, discnumber, tracknumber, title limit %d, %d" % (self.album_and_duplicate, startingIndex, requestedCount)
                                 artist_options = self.removepresuf(artist, 'ALBUMARTIST', controllername)
                             else:
+                                countstatement = "select count(*) from ArtistAlbumTrack where artist=? %s" % (self.album_and_duplicate)
+                                statement = "select * from tracks where id in (select track_id from ArtistAlbumTrack where artist=? %s) order by album, discnumber, tracknumber, title limit %d, %d" % (self.album_and_duplicate, startingIndex, requestedCount)
                                 artist_options = self.removepresuf(artist, 'ARTIST', controllername)
                             for artist in artist_options:
                                 if artist == '[unknown artist]': artist = ''
@@ -2311,12 +2342,6 @@ order by albumartist limit ?, ?
                                     # shouldn't get here
                                     break
                                 log.debug('    artist: %s', artist)
-                                if self.use_albumartist:
-                                    countstatement = "select count(*) from AlbumartistAlbumTrack where albumartist=? %s" % (self.album_and_duplicate)
-                                    statement = "select * from tracks where id in (select track_id from AlbumartistAlbumTrack where albumartist=? %s) order by album, tracknumber, title limit %d, %d" % (self.album_and_duplicate, startingIndex, requestedCount)
-                                else:                
-                                    countstatement = "select count(*) from ArtistAlbumTrack where artist=? %s" % (self.album_and_duplicate)
-                                    statement = "select * from tracks where id in (select track_id from ArtistAlbumTrack where artist=? %s) order by album, tracknumber, title limit %d, %d" % (self.album_and_duplicate, startingIndex, requestedCount)
 
                         elif criteria[0].endswith('microsoft:artistPerformer '):
 
@@ -2324,6 +2349,8 @@ order by albumartist limit ?, ?
                             # searchCriteria: upnp:class derivedfrom "object.item.audioItem" and @refID exists false and microsoft:artistPerformer = "1 Giant Leap"
                             log.debug('tracks for contributing artist')
                             artist = criteria[1][1:]
+                            countstatement = "select count(*) from ArtistAlbumTrack where artist=? %s" % (self.album_and_duplicate)
+                            statement = "select * from tracks where id in (select track_id from ArtistAlbumTrack where artist=? %s) order by album, discnumber, tracknumber, title limit %d, %d" % (self.album_and_duplicate, startingIndex, requestedCount)
                             artist_options = self.removepresuf(artist, 'CONTRIBUTINGARTIST', controllername)
                             for artist in artist_options:
                                 if artist == '[unknown artist]': artist = ''
@@ -2332,8 +2359,6 @@ order by albumartist limit ?, ?
                                     # shouldn't get here
                                     break
                                 log.debug('    artist: %s', artist)
-                                countstatement = "select count(*) from ArtistAlbumTrack where artist=? %s" % (self.album_and_duplicate)
-                                statement = "select * from tracks where id in (select track_id from ArtistAlbumTrack where artist=? %s) order by album, tracknumber, title limit %d, %d" % (self.album_and_duplicate, startingIndex, requestedCount)
 
                         elif criteria[0].endswith('upnp:genre '):
 
@@ -2341,6 +2366,12 @@ order by albumartist limit ?, ?
                             # searchCriteria: upnp:class derivedfrom "object.item.audioItem" and @refID exists false and upnp:genre = "Alt. Pop"
                             log.debug('tracks for genre')
                             genre = criteria[1][1:]
+                            if self.use_albumartist:
+                                countstatement = "select count(*) from GenreAlbumartistAlbumTrack where genre=? %s" % (self.album_and_duplicate)
+                                statement = "select * from tracks where id in (select track_id from GenreAlbumartistAlbumTrack where genre=? %s) order by albumartist, album, discnumber, tracknumber, title limit %d, %d" % (self.album_and_duplicate, startingIndex, requestedCount)
+                            else:                
+                                countstatement = "select count(*) from GenreArtistAlbumTrack where genre=? %s" % (self.album_and_duplicate)
+                                statement = "select * from tracks where id in (select track_id from GenreArtistAlbumTrack where genre=? %s) order by artist, album, discnumber, tracknumber, title limit %d, %d" % (self.album_and_duplicate, startingIndex, requestedCount)
                             genre_options = self.removepresuf(genre, 'GENRE', controllername)
                             for genre in genre_options:
                                 if genre == '[unknown genre]': genre = ''
@@ -2349,12 +2380,6 @@ order by albumartist limit ?, ?
                                     # shouldn't get here
                                     break
                                 log.debug('    genre: %s', genre)
-                                if self.use_albumartist:
-                                    countstatement = "select count(*) from GenreAlbumartistAlbumTrack where genre=? %s" % (self.album_and_duplicate)
-                                    statement = "select * from tracks where id in (select track_id from GenreAlbumartistAlbumTrack where genre=? %s) order by albumartist, album, tracknumber, title limit %d, %d" % (self.album_and_duplicate, startingIndex, requestedCount)
-                                else:                
-                                    countstatement = "select count(*) from GenreArtistAlbumTrack where genre=? %s" % (self.album_and_duplicate)
-                                    statement = "select * from tracks where id in (select track_id from GenreArtistAlbumTrack where genre=? %s) order by artist, album, tracknumber, title limit %d, %d" % (self.album_and_duplicate, startingIndex, requestedCount)
                     
                     elif len(criteria) == 3:
 
@@ -2390,12 +2415,22 @@ order by albumartist limit ?, ?
                                     
                             countstatement = "select count(*) from ComposerAlbumTrack where composer=? and album=? and duplicate=%s" % (duplicate_number)
                             countstatement2 = "select count(*) from ComposerAlbumTrack where composer=? and album=? and duplicate=%s and albumtype=?" % (duplicate_number)
-                            statement = "select * from tracks where id in (select track_id from ComposerAlbumTrack where composer=? and album=? and duplicate=%s) order by tracknumber, title limit %d, %d" % (duplicate_number, startingIndex, requestedCount)
+                            statement = "select * from tracks where id in (select track_id from ComposerAlbumTrack where composer=? and album=? and duplicate=%s) order by discnumber, tracknumber, title limit %d, %d" % (duplicate_number, startingIndex, requestedCount)
                             statement2 = "select distinct(albumtype) from ComposerAlbumTrack where composer=? and album=? and duplicate=%s order by albumtype" % (duplicate_number)
-                            statement3 = '''select * from tracks t, tracknumbers n where id in 
-                                           (select track_id from ComposerAlbumTrack where composer=? and album=? and duplicate=%s)
-                                           and t.id = n.track_id and t.genre=n.genre and t.artist=n.artist and t.albumartist=n.albumartist and t.album=n.album and t.composer=n.composer and t.duplicate=n.duplicate and n.albumtype=?
-                                           order by n.tracknumber, t.title limit %d, %d''' % (duplicate_number, startingIndex, requestedCount)
+#                            statement3 = '''select * from tracks t, tracknumbers n where id in 
+#                                           (select track_id from ComposerAlbumTrack where composer=? and album=? and duplicate=%s)
+#                                           and t.id = n.track_id and t.genre=n.genre and t.artist=n.artist and t.albumartist=n.albumartist and t.album=n.album and t.composer=n.composer and t.duplicate=n.duplicate and n.albumtype=?
+#                                           order by t.discnumber, n.tracknumber, t.title limit %d, %d''' % (duplicate_number, startingIndex, requestedCount)
+
+                            statement3 = '''
+                                            select * from tracks t join tracknumbers n on t.id = n.track_id where id in
+                                            (select track_id from tracknumbers where track_id in 
+                                                (select track_id from ComposerAlbumTrack where composer=? and album=? and duplicate=%s and albumtype=?)
+                                            and albumtype=?)
+                                            and albumtype=? 
+                                            order by n.tracknumber, t.title
+                                            limit %d, %d
+                                         ''' % (duplicate_number, startingIndex, requestedCount)
 
                         elif criteria[0].endswith('microsoft:artistAlbumArtist '):
                             # tracks for artist/album
@@ -2435,24 +2470,45 @@ order by albumartist limit ?, ?
                                     
                                 countstatement = "select count(*) from AlbumartistAlbumTrack where albumartist=? and album=? and duplicate=%s" % (duplicate_number)
                                 countstatement2 = "select count(*) from AlbumartistAlbumTrack where albumartist=? and album=? and duplicate=%s and albumtype=?" % (duplicate_number)
-                                statement = "select * from tracks where id in (select track_id from AlbumartistAlbumTrack where albumartist=? and album=? and duplicate=%s) order by tracknumber, title limit %d, %d" % (duplicate_number, startingIndex, requestedCount)
+                                statement = "select * from tracks where id in (select track_id from AlbumartistAlbumTrack where albumartist=? and album=? and duplicate=%s) order by discnumber, tracknumber, title limit %d, %d" % (duplicate_number, startingIndex, requestedCount)
                                 statement2 = "select distinct(albumtype) from AlbumartistAlbumTrack where albumartist=? and album=? and duplicate=%s order by albumtype" % (duplicate_number)
-                                statement3 = '''select * from tracks t, tracknumbers n where id in 
-                                               (select track_id from AlbumartistAlbumTrack where albumartist=? and album=? and duplicate=%s)
-                                               and t.id = n.track_id and t.genre=n.genre and t.artist=n.artist and t.albumartist=n.albumartist and t.album=n.album and t.composer=n.composer and t.duplicate=n.duplicate and n.albumtype=?
-                                               order by n.tracknumber, t.title limit %d, %d''' % (duplicate_number, startingIndex, requestedCount)
+#                                statement3 = '''select * from tracks t, tracknumbers n where id in 
+#                                               (select track_id from AlbumartistAlbumTrack where albumartist=? and album=? and duplicate=%s)
+#                                               and t.id = n.track_id and t.genre=n.genre and t.artist=n.artist and t.albumartist=n.albumartist and t.album=n.album and t.composer=n.composer and t.duplicate=n.duplicate and n.albumtype=?
+#                                               order by t.discnumber, n.tracknumber, t.title limit %d, %d''' % (duplicate_number, startingIndex, requestedCount)
+
+                                statement3 = '''
+                                                select * from tracks t join tracknumbers n on t.id = n.track_id where id in
+                                                (select track_id from tracknumbers where track_id in 
+                                                    (select track_id from AlbumartistAlbumTrack where albumartist=? and album=? and duplicate=%s and albumtype=?)
+                                                and albumtype=?)
+                                                and albumtype=? 
+                                                order by n.tracknumber, t.title
+                                                limit %d, %d
+                                             ''' % (duplicate_number, startingIndex, requestedCount)
+
                             else:                
                             
                                 possible_albumtypes = self.get_possible_albumtypes('ARTIST_ALBUM')
                                     
                                 countstatement = "select count(*) from ArtistAlbumTrack where artist=? and album=? and duplicate=%s" % (duplicate_number)
                                 countstatement2 = "select count(*) from ArtistAlbumTrack where artist=? and album=? and duplicate=%s and albumtype=?" % (duplicate_number)
-                                statement = "select * from tracks where id in (select track_id from ArtistAlbumTrack where artist=? and album=? and duplicate=%s) order by tracknumber, title limit %d, %d" % (duplicate_number, startingIndex, requestedCount)
+                                statement = "select * from tracks where id in (select track_id from ArtistAlbumTrack where artist=? and album=? and duplicate=%s) order by discnumber, tracknumber, title limit %d, %d" % (duplicate_number, startingIndex, requestedCount)
                                 statement2 = "select distinct(albumtype) from ArtistAlbumTrack where albumartist=? and album=? and duplicate=%s order by albumtype" % (duplicate_number)
-                                statement3 = '''select * from tracks t, tracknumbers n where id in 
-                                               (select track_id from ArtistAlbumTrack where albumartist=? and album=? and duplicate=%s)
-                                               and t.id = n.track_id and t.genre=n.genre and t.artist=n.artist and t.albumartist=n.albumartist and t.album=n.album and t.composer=n.composer and t.duplicate=n.duplicate and n.albumtype=?
-                                               order by n.tracknumber, t.title limit %d, %d''' % (duplicate_number, startingIndex, requestedCount)
+#                                statement3 = '''select * from tracks t, tracknumbers n where id in 
+#                                               (select track_id from ArtistAlbumTrack where albumartist=? and album=? and duplicate=%s)
+#                                               and t.id = n.track_id and t.genre=n.genre and t.artist=n.artist and t.albumartist=n.albumartist and t.album=n.album and t.composer=n.composer and t.duplicate=n.duplicate and n.albumtype=?
+#                                               order by t.discnumber, n.tracknumber, t.title limit %d, %d''' % (duplicate_number, startingIndex, requestedCount)
+
+                                statement3 = '''
+                                                select * from tracks t join tracknumbers n on t.id = n.track_id where id in
+                                                (select track_id from tracknumbers where track_id in 
+                                                    (select track_id from ArtistAlbumTrack where albumartist=? and album=? and duplicate=%s and albumtype=?)
+                                                and albumtype=?)
+                                                and albumtype=? 
+                                                order by n.tracknumber, t.title
+                                                limit %d, %d
+                                             ''' % (duplicate_number, startingIndex, requestedCount)
 
                         elif criteria[0].endswith('microsoft:artistPerformer '):
                             # tracks for contributing artist/album
@@ -2481,12 +2537,22 @@ order by albumartist limit ?, ?
                                     
                             countstatement = "select count(*) from ArtistAlbumTrack where artist=? and album=? and duplicate=%s" % (duplicate_number)
                             countstatement2 = "select count(*) from ArtistAlbumTrack where artist=? and album=? and duplicate=%s and albumtype=?" % (duplicate_number)
-                            statement = "select * from tracks where id in (select track_id from ArtistAlbumTrack where artist=? and album=? and duplicate=%s) order by tracknumber, title limit %d, %d" % (duplicate_number, startingIndex, requestedCount)
+                            statement = "select * from tracks where id in (select track_id from ArtistAlbumTrack where artist=? and album=? and duplicate=%s) order by discnumber, tracknumber, title limit %d, %d" % (duplicate_number, startingIndex, requestedCount)
                             statement2 = "select distinct(albumtype) from ArtistAlbumTrack where artist=? and album=? and duplicate=%s order by albumtype" % (duplicate_number)
-                            statement3 = '''select * from tracks t, tracknumbers n where id in 
-                                           (select track_id from ArtistAlbumTrack where artist=? and album=? and duplicate=%s)
-                                           and t.id = n.track_id and t.genre=n.genre and t.artist=n.artist and t.albumartist=n.albumartist and t.album=n.album and t.composer=n.composer and t.duplicate=n.duplicate and n.albumtype=?
-                                           order by n.tracknumber, t.title limit %d, %d''' % (duplicate_number, startingIndex, requestedCount)
+#                            statement3 = '''select * from tracks t, tracknumbers n where id in 
+#                                           (select track_id from ArtistAlbumTrack where artist=? and album=? and duplicate=%s)
+#                                           and t.id = n.track_id and t.genre=n.genre and t.artist=n.artist and t.albumartist=n.albumartist and t.album=n.album and t.composer=n.composer and t.duplicate=n.duplicate and n.albumtype=?
+#                                           order by t.discnumber, n.tracknumber, t.title limit %d, %d''' % (duplicate_number, startingIndex, requestedCount)
+
+                            statement3 = '''
+                                            select * from tracks t join tracknumbers n on t.id = n.track_id where id in
+                                            (select track_id from tracknumbers where track_id in 
+                                                (select track_id from ArtistAlbumTrack where artist=? and album=? and duplicate=%s and albumtype=?)
+                                            and albumtype=?)
+                                            and albumtype=? 
+                                            order by n.tracknumber, t.title
+                                            limit %d, %d
+                                         ''' % (duplicate_number, startingIndex, requestedCount)
 
                         elif criteria[0].endswith('upnp:genre '):
                             # tracks for genre/artist
@@ -2514,10 +2580,10 @@ order by albumartist limit ?, ?
                                     
                             if self.use_albumartist:
                                 countstatement = "select count(*) from GenreAlbumartistAlbumTrack where genre=? and albumartist=? %s" % (self.album_and_duplicate)
-                                statement = "select * from tracks where id in (select track_id from GenreAlbumartistAlbumTrack where genre=? and albumartist=? %s) order by tracknumber, title limit %d, %d" % (self.album_and_duplicate, startingIndex, requestedCount)
+                                statement = "select * from tracks where id in (select track_id from GenreAlbumartistAlbumTrack where genre=? and albumartist=? %s) order by discnumber, tracknumber, title limit %d, %d" % (self.album_and_duplicate, startingIndex, requestedCount)
                             else:                
                                 countstatement = "select count(*) from GenreArtistAlbumTrack where genre=? and artist=? %s" % (self.album_and_duplicate)
-                                statement = "select * from tracks where id in (select track_id from GenreArtistAlbumTrack where genre=? and artist=? %s) order by tracknumber, title limit %d, %d" % (self.album_and_duplicate, startingIndex, requestedCount)
+                                statement = "select * from tracks where id in (select track_id from GenreArtistAlbumTrack where genre=? and artist=? %s) order by discnumber, tracknumber, title limit %d, %d" % (self.album_and_duplicate, startingIndex, requestedCount)
                     else:
                         # len = 4
                         # tracks for genre/artist/album
@@ -2566,24 +2632,45 @@ order by albumartist limit ?, ?
                         
                             countstatement = "select count(*) from GenreAlbumartistAlbumTrack where genre=? and albumartist=? and album=? and duplicate = %s" % (duplicate_number)
                             countstatement2 = "select count(*) from GenreAlbumartistAlbumTrack where genre=? and albumartist=? and album=? and duplicate = %s and albumtype=?" % (duplicate_number)
-                            statement = "select * from tracks where id in (select track_id from GenreAlbumartistAlbumTrack where genre=? and albumartist=? and album=? and duplicate = %s) order by tracknumber, title limit %d, %d" % (duplicate_number, startingIndex, requestedCount)
+                            statement = "select * from tracks where id in (select track_id from GenreAlbumartistAlbumTrack where genre=? and albumartist=? and album=? and duplicate = %s) order by discnumber, tracknumber, title limit %d, %d" % (duplicate_number, startingIndex, requestedCount)
                             statement2 = "select distinct(albumtype) from GenreAlbumartistAlbumTrack where genre=? and albumartist=? and album=? and duplicate=%s order by albumtype" % (duplicate_number)
-                            statement3 = '''select * from tracks t, tracknumbers n where id in 
-                                           (select track_id from GenreAlbumartistAlbumTrack where genre=? and albumartist=? and album=? and duplicate=%s)
-                                           and t.id = n.track_id and t.genre=n.genre and t.artist=n.artist and t.albumartist=n.albumartist and t.album=n.album and t.composer=n.composer and t.duplicate=n.duplicate and n.albumtype=?
-                                           order by n.tracknumber, t.title limit %d, %d''' % (duplicate_number, startingIndex, requestedCount)
+#                            statement3 = '''select * from tracks t, tracknumbers n where id in 
+#                                           (select track_id from GenreAlbumartistAlbumTrack where genre=? and albumartist=? and album=? and duplicate=%s)
+#                                           and t.id = n.track_id and t.genre=n.genre and t.artist=n.artist and t.albumartist=n.albumartist and t.album=n.album and t.composer=n.composer and t.duplicate=n.duplicate and n.albumtype=?
+#                                           order by t.discnumber, n.tracknumber, t.title limit %d, %d''' % (duplicate_number, startingIndex, requestedCount)
+
+                            statement3 = '''
+                                            select * from tracks t join tracknumbers n on t.id = n.track_id where id in
+                                            (select track_id from tracknumbers where track_id in 
+                                                (select track_id from GenreAlbumartistAlbumTrack where genre=? and albumartist=? and album=? and duplicate=%s and albumtype=?)
+                                            and albumtype=?)
+                                            and albumtype=? 
+                                            order by n.tracknumber, t.title
+                                            limit %d, %d
+                                         ''' % (duplicate_number, startingIndex, requestedCount)
+
                         else:                
 
                             possible_albumtypes = self.get_possible_albumtypes('ARTIST_ALBUM')
                         
                             countstatement = "select count(*) from GenreArtistAlbumTrack where genre=? and artist=? and album=? and duplicate = %s" % (duplicate_number)
                             countstatement2 = "select count(*) from GenreArtistAlbumTrack where genre=? and artist=? and album=? and duplicate = %s and albumtype=?" % (duplicate_number)
-                            statement = "select * from tracks where id in (select track_id from GenreArtistAlbumTrack where genre=? and artist=? and album=? and duplicate = %s) order by tracknumber, title limit %d, %d" % (duplicate_number, startingIndex, requestedCount)
+                            statement = "select * from tracks where id in (select track_id from GenreArtistAlbumTrack where genre=? and artist=? and album=? and duplicate = %s) order by discnumber, tracknumber, title limit %d, %d" % (duplicate_number, startingIndex, requestedCount)
                             statement2 = "select distinct(albumtype) from GenreArtistAlbumTrack where genre=? and albumartist=? and album=? and duplicate=%s order by albumtype" % (duplicate_number)
-                            statement3 = '''select * from tracks t, tracknumbers n where id in 
-                                           (select track_id from GenreArtistAlbumTrack where genre=? and albumartist=? and album=? and duplicate=%s)
-                                           and t.id = n.track_id and t.genre=n.genre and t.artist=n.artist and t.albumartist=n.albumartist and t.album=n.album and t.composer=n.composer and t.duplicate=n.duplicate and n.albumtype=?
-                                           order by n.tracknumber, t.title limit %d, %d''' % (duplicate_number, startingIndex, requestedCount)
+#                            statement3 = '''select * from tracks t, tracknumbers n where id in 
+#                                           (select track_id from GenreArtistAlbumTrack where genre=? and albumartist=? and album=? and duplicate=%s)
+#                                           and t.id = n.track_id and t.genre=n.genre and t.artist=n.artist and t.albumartist=n.albumartist and t.album=n.album and t.composer=n.composer and t.duplicate=n.duplicate and n.albumtype=?
+#                                           order by t.discnumber, n.tracknumber, t.title limit %d, %d''' % (duplicate_number, startingIndex, requestedCount)
+
+                            statement3 = '''
+                                            select * from tracks t join tracknumbers n on t.id = n.track_id where id in
+                                            (select track_id from tracknumbers where track_id in 
+                                                (select track_id from GenreArtistAlbumTrack where genre=? and albumartist=? and album=? and duplicate=%s and albumtype=?)
+                                            and albumtype=?)
+                                            and albumtype=? 
+                                            order by n.tracknumber, t.title
+                                            limit %d, %d
+                                         ''' % (duplicate_number, startingIndex, requestedCount)
 
                     log.debug("count statement: %s", countstatement)
                     log.debug("statement: %s", statement)
@@ -2662,22 +2749,19 @@ order by albumartist limit ?, ?
                     c.execute(statement2, (artist, field))
                     albumtype, = c.fetchone()
                     if albumtype != 10:
-                        c.execute(statement3, (artist, field, albumtype))
+                        c.execute(statement3, (artist, field, albumtype, albumtype, albumtype))
                     else:            
                         c.execute(statement, (artist, field))
             elif tracks_type == 'GENRE':
                 c.execute(statement2, (genre, artist, field))
                 albumtype, = c.fetchone()
                 if albumtype != 10:
-                    c.execute(statement3, (genre, artist, field, albumtype))
+                    c.execute(statement3, (genre, artist, field, albumtype, albumtype, albumtype))
                 else:            
                     c.execute(statement, (genre, artist, field))
 
             for row in c:
                 log.debug("row: %s", row)
-                if startingIndex == 0 and count > 100:
-                    # hack to get initial display back quicker
-                    break
                 if albumtype != 10:
                     id, id2, parentID, duplicate, title, artist, album, genre, tracknumber, year, albumartist, composer, codec, length, size, created, path, filename, discnumber, comment, folderart, trackart, bitrate, samplerate, bitspersample, channels, mime, lastmodified, upnpclass, folderartid, trackartid, inserted, lastplayed, playcount, lastscanned, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10 = row
                 else:
@@ -2767,9 +2851,6 @@ order by albumartist limit ?, ?
             c.execute(statement)
             for row in c:
 #                log.debug("row: %s", row)
-                if startingIndex == 0 and count > 100:
-                    # hack to get initial display back quicker
-                    break
                 id, parentID, playlist, path, upnpclass = row
                 id = str(id)
                 if playlist == '': playlist = '[unknown playlist]'
@@ -2924,7 +3005,13 @@ order by albumartist limit ?, ?
                         outfix += replace % playcount
                     elif fix == 'year':
                         year = fixdict['year']
-                        if year == '': year = self.chunk_metadata_empty
+                        if year == '':
+                            year = self.chunk_metadata_empty
+                        else:
+                            try:
+                                year = datetime.date.fromordinal(year).strftime(self.chunk_metadata_date_format)
+                            except TypeError:
+                                year = self.chunk_metadata_empty
                         outfix += replace % year
                     elif fix == 'inserted':
                         inserted = fixdict['inserted'] 
@@ -3259,10 +3346,10 @@ order by albumartist limit ?, ?
         return newalbum, dup
 
     def choosecover(self, folderart, trackart, folderartid, trackartid):
-        log.debug(folderart)
-        log.debug(trackart)
-        log.debug(folderartid)
-        log.debug(trackartid)
+#        log.debug(folderart)
+#        log.debug(trackart)
+#        log.debug(folderartid)
+#        log.debug(trackartid)
         try:
             if trackart and trackart != '' and not (folderart and folderart!= '' and self.prefer_folderart):
                 cover = trackart
@@ -3275,12 +3362,12 @@ order by albumartist limit ?, ?
                 artid = ''
         except Exception, e:
             log.debug(e)
-        log.debug('cover: %s  id: %s' % (cover, artid))
+#        log.debug('cover: %s  id: %s' % (cover, artid))
         return cover, artid
 
     def soap_GetSearchCapabilities(self, *args, **kwargs):
         log.debug("PROXY_GetSearchCapabilities: %s", kwargs)
-        result = {'SearchCaps': ''}
+        result = {'SearchCaps': 'Artist,Contributing Artist,Composer,Album,Track,ALL'}
         return result
     def soap_GetSortCapabilities(self, *args, **kwargs):
         log.debug("PROXY_GetSortCapabilities: %s", kwargs)
