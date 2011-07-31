@@ -17,7 +17,7 @@ import sys
 import subprocess
 from threading import *
 import guiFunctions
-
+import time
 
 # Define notification event for thread completion
 EVT_RESULT_ID = wx.NewId()
@@ -45,15 +45,54 @@ class WorkerThread(Thread):
         self._want_abort = 0
         self.start()
 
+    def stop(self):
+        self.stop()
+
     def run(self):
         """Run Worker Thread."""
         proc = subprocess.Popen([scanCMD], shell=True,stdout=subprocess.PIPE)
-        for line in proc.communicate()[0]:
-            wx.PostEvent(self._notify_window, ResultEvent(line))
-            sys.stdout.flush()
-        wx.PostEvent(self._notify_window, ResultEvent(None))
-        return
 
+# THIS WORKS, JUST DOESN'T UPDATE THE LOGVIEW PROPERLY
+#        for line in proc.communicate()[0]:
+#            wx.PostEvent(self._notify_window, ResultEvent(line))
+# -----------------------------------------------------------------------------
+# THIS IS PROBLEMATIC!
+        #Set the filename and open the file
+
+        # delay for 1 second while log gets created...
+        time.sleep(2)
+        filename = 'logs/scanlog.txt'
+        file = open(filename,'r')
+
+        where = file.tell()
+        line = file.readline()
+        size = os.path.getsize(filename)
+
+        while where == 0:
+            where = file.tell()
+
+        while where <= size:
+            size = os.path.getsize(filename)
+
+            print str(where) + "/" + str(size)
+            
+            if not line:
+                time.sleep(0.1)
+                wx.PostEvent(self._notify_window, ResultEvent(file.seek(where)))
+                line = file.readline()
+            else:
+                wx.PostEvent(self._notify_window, ResultEvent(line))
+                line = file.readline()
+
+            if where == size:
+                print "trying to stop"
+                wx.PostEvent(self._notify_window, ResultEvent(None))
+                Thread.stop()
+                
+            where = file.tell()
+
+
+# ------------------------------------------------------------------------------
 class ScanPanel(wx.Panel):
     """
     Scan Tab for running Sonospy Database Scans, Updates and Repairs
@@ -172,10 +211,14 @@ class ScanPanel(wx.Panel):
         if event.data is None:
             # Thread aborted (using our convention of None return)
             self.LogWindow.AppendText("\n[Complete]\n\n")
+            self.worker = None
             self.setButtons(True)
         else:
             # Process results here
             self.LogWindow.AppendText(event.data)
+            if "[Complete]" in self.LogWindow.Value:
+                event.data == None
+
         # In either event, the worker is done
         self.worker = None
         guiFunctions.statusText(self, "")
