@@ -7,18 +7,17 @@
 # - STDOUT to LogView.Value in realtime. Broken in WorkerThread?
 # - Hangs on LARGE database read/writes.  Maybe I am trying to push too
 #   much at once to the LogWindow?
-# - Add statusText() where appropriate.  Replace ERROR:?
-# - Handle writing GUIPref.ini
-# - Handle deleted config entries in ini file?
-# - Handle multi-line text box in config file?
+# - Add guiFunctions.statusText() where appropriate.  Replace ERROR:?
 ###############################################################################
 
 import wx
 from wxPython.wx import *
 import os
+import sys
 import subprocess
 from threading import *
-import ConfigParser
+import guiFunctions
+
 
 # Define notification event for thread completion
 EVT_RESULT_ID = wx.NewId()
@@ -51,6 +50,7 @@ class WorkerThread(Thread):
         proc = subprocess.Popen([scanCMD], shell=True,stdout=subprocess.PIPE)
         for line in proc.communicate()[0]:
             wx.PostEvent(self._notify_window, ResultEvent(line))
+            sys.stdout.flush()
         wx.PostEvent(self._notify_window, ResultEvent(None))
         return
 
@@ -75,7 +75,7 @@ class ScanPanel(wx.Panel):
 
         self.tc_MainDatabase = wx.TextCtrl(panel)
         self.tc_MainDatabase.SetToolTip(wx.ToolTip(help_Database))
-        self.tc_MainDatabase.Value = self.configMe("database", parse=True)
+        self.tc_MainDatabase.Value = guiFunctions.configMe("scan", "database")
         sizer.Add(self.tc_MainDatabase, pos=(0, 1), span=(1, 4), flag=wx.TOP|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, border=10)
 
         self.bt_MainDatabase = wx.Button(panel, label="Browse...")
@@ -90,7 +90,7 @@ class ScanPanel(wx.Panel):
         self.multiText = wx.TextCtrl(panel, -1,"",size=(300, 100), style=wx.TE_MULTILINE|wx.TE_READONLY)
         self.multiText.SetToolTip(wx.ToolTip(help_FoldersToScan))
         self.multiText.SetInsertionPoint(0)
-        self.multiText.Value = self.configMe("folder", parse=True)
+        self.multiText.Value = guiFunctions.configMe("scan", "folder", parse=True)
         folderBoxSizer.Add(self.multiText, flag=wx.EXPAND)
         sizer.Add(folderBoxSizer, pos=(1, 0), span=(1, 6), flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
 
@@ -133,7 +133,7 @@ class ScanPanel(wx.Panel):
         self.ck_ScanVerbose = wx.CheckBox(panel, label="Verbose")
         help_ScanVerbose = "Select this checkbox if you want to turn on the verbose settings during the scan."
         self.ck_ScanVerbose.SetToolTip(wx.ToolTip(help_ScanVerbose))
-        self.ck_ScanVerbose.Value = self.configMe("verbose", bool=True)
+        self.ck_ScanVerbose.Value = guiFunctions.configMe("scan", "verbose", bool=True)
         sizer.Add(self.ck_ScanVerbose, pos=(4,2), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
 
         # SAVE LOG TO FILE
@@ -148,11 +148,11 @@ class ScanPanel(wx.Panel):
         sizer.Add(hl_SepLine2, pos=(5, 0), span=(1, 6), flag=wx.EXPAND, border=10)
     # --------------------------------------------------------------------------
     # [6] Output/Log Box -------------------------------------------------------
+#        self.LogWindow = wx.PyShellOutput(panel, -1,"",size=(100, 300), style=wx.TE_MULTILINE|wx.TE_READONLY)
         self.LogWindow = wx.TextCtrl(panel, -1,"",size=(100, 300), style=wx.TE_MULTILINE|wx.TE_READONLY)
         help_LogWindow = "Results of a scan or repair will appear here."
         self.LogWindow.SetToolTip(wx.ToolTip(help_LogWindow))
         self.LogWindow.SetInsertionPoint(0)
-        self.LogWindow.Disable()
         sizer.Add(self.LogWindow, pos=(6,0), span=(1,6), flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
 
 # DEBUG ------------------------------------------------------------------------
@@ -166,10 +166,6 @@ class ScanPanel(wx.Panel):
 
         sizer.AddGrowableCol(2)
         panel.SetSizer(sizer)
-        self.statusText("Scan your music with this tab...")
-        
-    def statusText(self, line):
-        self.GetParent().GetParent().GetParent().SetStatusText(line)
 
     def onResult(self, event):
         """Show Result status."""
@@ -182,7 +178,7 @@ class ScanPanel(wx.Panel):
             self.LogWindow.AppendText(event.data)
         # In either event, the worker is done
         self.worker = None
-        statusText = ""
+        guiFunctions.statusText(self, "")
 
     def bt_ScanRepairClick(self, event):
 # DEBUG ------------------------------------------------------------------------
@@ -201,7 +197,7 @@ class ScanPanel(wx.Panel):
             scanCMD = "./scan " + getOpts +"-d " + self.tc_MainDatabase.Value + " -r"
 
             self.LogWindow.AppendText("Running Repair on " + self.tc_MainDatabase.Value + "...\n\n")
-            statusText("Running Repair...")
+            guiFunctions.statusText(self, "Running Repair...")
 
             if not self.worker:
                 self.worker = WorkerThread(self)
@@ -217,7 +213,7 @@ class ScanPanel(wx.Panel):
             selected = dialog.GetFilenames()
             for selection in selected:
                 self.tc_MainDatabase.Value = selection
-                self.statusText("Database selected...")
+                guiFunctions.statusText(self, "Database selected...")
         dialog.Destroy()
         
 
@@ -225,7 +221,7 @@ class ScanPanel(wx.Panel):
         dialog = wx.DirDialog(self, "Add a Directory...", style=wx.DD_DEFAULT_STYLE)
 
         if dialog.ShowModal() == wx.ID_OK:
-            self.multiText.Value += "%s" % dialog.GetPath() + "\n"
+            self.multiText.AppendText("%s" % dialog.GetPath() + "\n")
         dialog.Destroy()
 
     def bt_FoldersToScanClearClick(self, event):
@@ -289,7 +285,7 @@ class ScanPanel(wx.Panel):
                 self.LogWindow.AppendText("ERROR\tNo folder selected to scan!\n")
             else:
                 self.LogWindow.AppendText("Running Scan...\n\n")
-                self.statusText("Running Scan...")
+                guiFunctions.statusText(self, "Running Scan...")
                 while (numLines < maxLines):
                     scanCMD += str(self.multiText.GetLineText(numLines)) + " "
                     numLines += 1
@@ -299,35 +295,3 @@ class ScanPanel(wx.Panel):
                     self.worker = WorkerThread(self)
                     self.setButtons(False)
 
-    def configMe(self, term, integer=False, bool=False, parse=False):
-        config = ConfigParser.ConfigParser()
-        config.read("GUIpref.ini")
-
-        if integer == True:
-            fetchMe = config.getint("scan", term)
-        elif bool == True:
-            fetchMe = config.getboolean("scan", term)
-        else:
-            fetchMe = config.get("scan", term)
-
-        if parse == True:
-            # check for space after comma, remove space, replace all commas
-            # with newlines
-            fetchMe = fetchMe.replace(", ", ",")
-            fetchMe = fetchMe.replace(",", "\n")
-            
-            if fetchMe[1] == " ":
-                print "true"
-                fetchMe[0] = ""
-            fetchMe = str(fetchMe)
-
-        if fetchMe == NULL:
-            return 1;
-        else:
-            return(fetchMe)
-
-#        # dump entire config file
-#        for section in config.sections():
-#            print section
-#            for option in config.options(section):
-#                print " ", option, "=", config.get(section, option)

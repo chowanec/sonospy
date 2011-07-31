@@ -18,7 +18,7 @@ import wx
 from wxPython.wx import *
 import os
 import subprocess
-import ConfigParser
+import guiFunctions
 
 list_checkboxID = []
 list_checkboxLabel = []
@@ -59,7 +59,7 @@ class LaunchPanel(wx.Panel):
     # [2] Generate DB list and increment sizer Index
 
     # Get a count of *.db from the filesystem
-        numDB = scrubDB(os.getcwd())
+        numDB = guiFunctions.scrubDB(os.getcwd())
 
         # Checkbox (enable, disable for launch)
         # textCtrl (for Proxy name in controller)
@@ -104,7 +104,7 @@ class LaunchPanel(wx.Panel):
         self.rd_Proxy = wx.RadioButton(panel, label="Proxy")
         self.rd_Web = wx.RadioButton(panel, label="Web")
 
-        if self.configMe("proxy", bool=True) == True:
+        if guiFunctions.configMe("launch", "proxy", bool=True) == True:
             self.rd_Proxy.SetValue(True)
         else:
             self.rd_Web.SetValue(True)
@@ -115,9 +115,6 @@ class LaunchPanel(wx.Panel):
 
         sizer.AddGrowableCol(2)
         panel.SetSizer(sizer)
-
-    def statusText(self, line):
-        self.GetParent().GetParent().GetParent().SetStatusText(line)
         
     def OnCheck(self, event):
 
@@ -126,6 +123,7 @@ class LaunchPanel(wx.Panel):
 #       print "Checkbox " + str(item) + ":\t\t\tID:" + str(list_checkboxID[item]) + "\tLABEL:" + list_checkboxLabel[item]
 #       print "Text Control " + str(item) + ":\t\tID:" + str(list_txtctrlID[item]) + "\tLABEL:" + list_txtctrlLabel[item]
 # ------------------------------------------------------------------------------
+
         pass
 
     def enableAllChecks(self, event):
@@ -173,36 +171,4 @@ class LaunchPanel(wx.Panel):
             self.bt_Launch.Label = "Stop"
             self.statusText("Sonospy Service Started...")
 
-    def configMe(self, term, integer=False, bool=False, parse=False):
-        config = ConfigParser.ConfigParser()
-        config.read("GUIpref.ini")
 
-        if integer == True:
-            fetchMe = config.getint("launch", term)
-        elif bool == True:
-            fetchMe = config.getboolean("launch", term)
-        else:
-            fetchMe = config.get("launch", term)
-
-        if parse == True:
-            fetchMe = fetchMe.replace(",", "\n")
-            fetchMe = str(fetchMe)
-            
-        if fetchMe == NULL:
-            return 1;
-        else:
-            return(fetchMe)
-
-#        # dump entire config file
-#        for section in config.sections():
-#            print section
-#            for option in config.options(section):
-#                print " ", option, "=", config.get(section, option)
-
-def scrubDB(path):
-    asps = []
-    for root, dirs, files in os.walk(os.getcwd()):
-        for file in files:
-            if file.endswith('.db'):
-                    asps.append(file)
-    return asps
