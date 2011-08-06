@@ -237,7 +237,7 @@ class ScanPanel(wx.Panel):
             if self.ck_ScanVerbose.Value == True:
                 getOpts = "-v "
 
-            scanCMD = "./scan " + getOpts +"-d " + self.tc_MainDatabase.Value + " -r"
+            scanCMD = "python ../../scan.py " + getOpts +"-d " + "../../" + self.tc_MainDatabase.Value + " -r"
 
             self.LogWindow.AppendText("Running Repair on " + self.tc_MainDatabase.Value + "...\n\n")
             guiFunctions.statusText(self, "Running Repair...")
@@ -319,7 +319,7 @@ class ScanPanel(wx.Panel):
                 getOpts = "-v "
 
             global scanCMD
-            scanCMD = "./scan " + getOpts +"-d " + self.tc_MainDatabase.Value + " "
+            scanCMD = "python ../../scan.py " + getOpts +"-d " + "../../" + self.tc_MainDatabase.Value + " "
 
             numLines=0
             maxLines=(int(self.multiText.GetNumberOfLines()))

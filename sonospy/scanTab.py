@@ -5,9 +5,9 @@
 ###############################################################################
 # TODO:
 # - STDOUT to LogView.Value in realtime. Broken in WorkerThread?
-# - Hangs on LARGE database read/writes.  Maybe I am trying to push too
-#   much at once to the LogWindow?
-# - Add guiFunctions.statusText() where appropriate.  Replace ERROR:?
+# - Hangs on LARGE database read/writes. Maybe I am trying to push too
+# much at once to the LogWindow?
+# - Add guiFunctions.statusText() where appropriate. Replace ERROR:?
 ###############################################################################
 
 import wx
@@ -17,7 +17,7 @@ import sys
 import subprocess
 from threading import *
 import guiFunctions
-import time
+
 
 # Define notification event for thread completion
 EVT_RESULT_ID = wx.NewId()
@@ -45,58 +45,19 @@ class WorkerThread(Thread):
         self._want_abort = 0
         self.start()
 
-    def stop(self):
-        self.stop()
-
     def run(self):
         """Run Worker Thread."""
         proc = subprocess.Popen([scanCMD], shell=True,stdout=subprocess.PIPE)
+        for line in proc.communicate()[0]:
+            wx.PostEvent(self._notify_window, ResultEvent(line))
+            sys.stdout.flush()
+        wx.PostEvent(self._notify_window, ResultEvent(None))
+        return
 
-# THIS WORKS, JUST DOESN'T UPDATE THE LOGVIEW PROPERLY
-#        for line in proc.communicate()[0]:
-#            wx.PostEvent(self._notify_window, ResultEvent(line))
-# -----------------------------------------------------------------------------
-# THIS IS PROBLEMATIC!
-        #Set the filename and open the file
-
-        # delay for 1 second while log gets created...
-        time.sleep(2)
-        filename = 'logs/scanlog.txt'
-        file = open(filename,'r')
-
-        where = file.tell()
-        line = file.readline()
-        size = os.path.getsize(filename)
-
-        while where == 0:
-            where = file.tell()
-
-        while where <= size:
-            size = os.path.getsize(filename)
-
-            print str(where) + "/" + str(size)
-            
-            if not line:
-                time.sleep(0.1)
-                wx.PostEvent(self._notify_window, ResultEvent(file.seek(where)))
-                line = file.readline()
-            else:
-                wx.PostEvent(self._notify_window, ResultEvent(line))
-                line = file.readline()
-
-            if where == size:
-                print "trying to stop"
-                wx.PostEvent(self._notify_window, ResultEvent(None))
-                Thread.stop()
-                
-            where = file.tell()
-
-
-# ------------------------------------------------------------------------------
 class ScanPanel(wx.Panel):
     """
-    Scan Tab for running Sonospy Database Scans, Updates and Repairs
-    """
+Scan Tab for running Sonospy Database Scans, Updates and Repairs
+"""
     #----------------------------------------------------------------------
     def __init__(self, parent):
         """"""
@@ -124,7 +85,7 @@ class ScanPanel(wx.Panel):
     # --------------------------------------------------------------------------
     # [1] Paths to scan for new Music ------------------------------------------
         self.sb_FoldersToScan = wx.StaticBox(panel, label="Folders to Scan:", size=(200, 100))
-        help_FoldersToScan = "Folders you will scan for music files are listed here.  Click ADD to browse for a *top-level* folder.  Scan will search all sub-folders for valid music."
+        help_FoldersToScan = "Folders you will scan for music files are listed here. Click ADD to browse for a *top-level* folder. Scan will search all sub-folders for valid music."
         folderBoxSizer = wx.StaticBoxSizer(self.sb_FoldersToScan, wx.VERTICAL)
         self.multiText = wx.TextCtrl(panel, -1,"",size=(300, 100), style=wx.TE_MULTILINE|wx.TE_READONLY)
         self.multiText.SetToolTip(wx.ToolTip(help_FoldersToScan))
@@ -137,7 +98,7 @@ class ScanPanel(wx.Panel):
     # [2] Buttons to Add Folder, Clear Scan Area -------------------------------
         # ADD FOLDER
         self.bt_FoldersToScanAdd = wx.Button(panel, label="Add")
-        help_FoldersToScanAdd = "Add a top-level folder to the 'Folders to Scan' field.  The scan will search any sub-folders beneath whatever folder you add."
+        help_FoldersToScanAdd = "Add a top-level folder to the 'Folders to Scan' field. The scan will search any sub-folders beneath whatever folder you add."
         self.bt_FoldersToScanAdd.SetToolTip(wx.ToolTip(help_FoldersToScanAdd))
         self.bt_FoldersToScanAdd.Bind(wx.EVT_BUTTON, self.bt_FoldersToScanAddClick, self.bt_FoldersToScanAdd)
         sizer.Add(self.bt_FoldersToScanAdd, pos=(2,0), span=(1,2), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
@@ -156,7 +117,7 @@ class ScanPanel(wx.Panel):
     # [4] Add Scan Options and Scan Button -------------------------------------
         # SCAN/UPDATE
         self.bt_ScanUpdate = wx.Button(panel, label="Scan/Update")
-        help_ScanUpdate = "Click here to begin your scan of the folders listed above.  This will create a new database if one doesn't exist.  Otherwise it will update the database with any new music it finds."
+        help_ScanUpdate = "Click here to begin your scan of the folders listed above. This will create a new database if one doesn't exist. Otherwise it will update the database with any new music it finds."
         self.bt_ScanUpdate.SetToolTip(wx.ToolTip(help_ScanUpdate))
         self.bt_ScanUpdate.Bind(wx.EVT_BUTTON, self.bt_ScanUpdateClick, self.bt_ScanUpdate)
         sizer.Add(self.bt_ScanUpdate, pos=(4,0), span=(1,2), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
@@ -187,7 +148,7 @@ class ScanPanel(wx.Panel):
         sizer.Add(hl_SepLine2, pos=(5, 0), span=(1, 6), flag=wx.EXPAND, border=10)
     # --------------------------------------------------------------------------
     # [6] Output/Log Box -------------------------------------------------------
-#        self.LogWindow = wx.PyShellOutput(panel, -1,"",size=(100, 300), style=wx.TE_MULTILINE|wx.TE_READONLY)
+# self.LogWindow = wx.PyShellOutput(panel, -1,"",size=(100, 300), style=wx.TE_MULTILINE|wx.TE_READONLY)
         self.LogWindow = wx.TextCtrl(panel, -1,"",size=(100, 300), style=wx.TE_MULTILINE|wx.TE_READONLY)
         help_LogWindow = "Results of a scan or repair will appear here."
         self.LogWindow.SetToolTip(wx.ToolTip(help_LogWindow))
@@ -195,8 +156,8 @@ class ScanPanel(wx.Panel):
         sizer.Add(self.LogWindow, pos=(6,0), span=(1,6), flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
 
 # DEBUG ------------------------------------------------------------------------
-#        self.multiText.Value = "~/Network/Music/Weezer\n"
-#        self.multiText.Value += "~/Network/Music/Yuck"
+# self.multiText.Value = "~/Network/Music/Weezer\n"
+# self.multiText.Value += "~/Network/Music/Yuck"
 # ------------------------------------------------------------------------------
 
         # Indicate we don't have a worker thread yet
@@ -211,21 +172,17 @@ class ScanPanel(wx.Panel):
         if event.data is None:
             # Thread aborted (using our convention of None return)
             self.LogWindow.AppendText("\n[Complete]\n\n")
-            self.worker = None
             self.setButtons(True)
         else:
             # Process results here
             self.LogWindow.AppendText(event.data)
-            if "[Complete]" in self.LogWindow.Value:
-                event.data == None
-
         # In either event, the worker is done
         self.worker = None
         guiFunctions.statusText(self, "")
 
     def bt_ScanRepairClick(self, event):
 # DEBUG ------------------------------------------------------------------------
-#        self.tc_MainDatabase.Value = "test.db"
+# self.tc_MainDatabase.Value = "test.db"
 # ------------------------------------------------------------------------------
         global scanCMD
         getOpts = ""
@@ -237,7 +194,7 @@ class ScanPanel(wx.Panel):
             if self.ck_ScanVerbose.Value == True:
                 getOpts = "-v "
 
-            scanCMD = "./scan " + getOpts +"-d " + self.tc_MainDatabase.Value + " -r"
+            scanCMD = "./scan.py " + getOpts +"-d " + self.tc_MainDatabase.Value + " -r"
 
             self.LogWindow.AppendText("Running Repair on " + self.tc_MainDatabase.Value + "...\n\n")
             guiFunctions.statusText(self, "Running Repair...")
@@ -246,7 +203,7 @@ class ScanPanel(wx.Panel):
                 self.worker = WorkerThread(self)
                 self.setButtons(False)
                 wx.SetCursor(wx.StockCursor(wx.CURSOR_WATCH))
-                
+
     def bt_MainDatabaseClick(self, event):
         filters = 'Text files (*.db)|*.db|All files (*.*)|*.*'
         dialog = wx.FileDialog ( None, message = 'Select Database File...', wildcard = filters, style = wxOPEN)
@@ -258,7 +215,7 @@ class ScanPanel(wx.Panel):
                 self.tc_MainDatabase.Value = selection
                 guiFunctions.statusText(self, "Database selected...")
         dialog.Destroy()
-        
+
 
     def bt_FoldersToScanAddClick(self, event):
         dialog = wx.DirDialog(self, "Add a Directory...", style=wx.DD_DEFAULT_STYLE)
@@ -281,9 +238,9 @@ class ScanPanel(wx.Panel):
 
     def setButtons(self, state):
         """
-        Toggle for the button states.
-        """
-        
+Toggle for the button states.
+"""
+
         if state == True:
             self.bt_FoldersToScanAdd.Enable()
             self.bt_FoldersToScanClear.Enable()
@@ -308,7 +265,7 @@ class ScanPanel(wx.Panel):
         self.LogWindow.Enable()
 
 # DEBUG ------------------------------------------------------------------------
-#        self.tc_MainDatabase.Value = "test.db"
+# self.tc_MainDatabase.Value = "test.db"
 #-------------------------------------------------------------------------------
         if self.tc_MainDatabase.Value == "":
             self.LogWindow.AppendText("ERROR:\tNo database name selected!\n")
@@ -319,7 +276,7 @@ class ScanPanel(wx.Panel):
                 getOpts = "-v "
 
             global scanCMD
-            scanCMD = "./scan " + getOpts +"-d " + self.tc_MainDatabase.Value + " "
+            scanCMD = "./scan.py " + getOpts +"-d " + self.tc_MainDatabase.Value + " "
 
             numLines=0
             maxLines=(int(self.multiText.GetNumberOfLines()))
@@ -337,4 +294,3 @@ class ScanPanel(wx.Panel):
                 if not self.worker:
                     self.worker = WorkerThread(self)
                     self.setButtons(False)
-
