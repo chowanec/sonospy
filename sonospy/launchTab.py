@@ -7,8 +7,6 @@
 # - Connect Web only
 # - Connect Show Duplicates
 # - Add refresh button
-# - Fix the core command to work on Windows and not be so janky (i.e. remove
-#   the cd .. and cd -)
 # - Limit the max number of proxies based on what Mark is doing in his code.
 # - Add statusText() where appropriate.  Replace ERROR:?
 # - Add tooltips.
@@ -161,7 +159,7 @@ class LaunchPanel(wx.Panel):
                     launchCMD += "-wSonospy=" + list_txtctrlLabel[item] + "," + list_checkboxLabel[item] + " "
 
 # DEBUG ------------------------------------------------------------------------
-            print launchCMD
+#            print launchCMD
 # ------------------------------------------------------------------------------
 
         proc = subprocess.Popen([launchCMD],shell=True)
