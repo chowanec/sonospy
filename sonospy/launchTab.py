@@ -4,7 +4,6 @@
 # Copyright, blah, blah
 ###############################################################################
 # TODO:
-# - Connect Web only
 # - Connect Show Duplicates
 # - Add refresh button
 # - Limit the max number of proxies based on what Mark is doing in his code.
