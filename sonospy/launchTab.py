@@ -136,8 +136,11 @@ class LaunchPanel(wx.Panel):
             wx.FindWindowById(list_checkboxID[item]).Value = self.ck_EnableAll.Value
 
     def bt_LaunchClick(self, event):
-        # core command - fix this eventually
-        launchCMD = "cd ..;./sonospy_"
+        # back up to the folder below our current one.  save cwd in variable
+        owd = os.getcwd()
+        os.chdir(os.pardir)
+
+        launchCMD = "./sonospy_"
 
         # which version are we running?
         if self.rd_Proxy.Value == True:
@@ -151,15 +154,11 @@ class LaunchPanel(wx.Panel):
 
         # build out the command
         if self.bt_Launch.Label == "Stop":
-            # Fix this later
-            launchCMD = "cd ..;./sonospy_stop;cd -"
+            launchCMD = "./sonospy_stop"
         else:
             for item in range(len(list_checkboxID)):
                 if wx.FindWindowById(list_checkboxID[item]).Value == True:
                     launchCMD += "-wSonospy=" + list_txtctrlLabel[item] + "," + list_checkboxLabel[item] + " "
-
-            # kludge to get me back to this directory
-            launchCMD += ";cd -"
 
 # DEBUG ------------------------------------------------------------------------
             print launchCMD
@@ -167,6 +166,8 @@ class LaunchPanel(wx.Panel):
 
         proc = subprocess.Popen([launchCMD],shell=True)
 
+        # set back to original working directory
+        os.chdir(owd)
 
         if self.bt_Launch.Label == "Stop":
             self.bt_Launch.Label = "Launch"
