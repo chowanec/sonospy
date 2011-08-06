@@ -17,7 +17,7 @@ from wxPython.wx import *
 import ConfigParser
 
 def configMe(heading, term, integer=False, bool=False, parse=False):
-    config = ConfigParser.ConfigParser()
+    config = ConfigParser.SafeConfigParser()
     config.read("GUIpref.ini")
 
     if config.has_option(heading, term) == True:

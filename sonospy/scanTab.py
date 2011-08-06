@@ -146,7 +146,7 @@ class ScanPanel(wx.Panel):
 
         # SAVE AS DEFAULTS
         self.bt_SaveDefaults = wx.Button(panel, label="Save Defaults")
-        help_SaveDefaults = "Save the log below to a file."
+        help_SaveDefaults = "Save current settings as default."
         self.bt_SaveDefaults.SetToolTip(wx.ToolTip(help_SaveDefaults))
         self.bt_SaveDefaults.Bind(wx.EVT_BUTTON, self.bt_SaveDefaultsClick, self.bt_SaveDefaults)
         sizer.Add(self.bt_SaveDefaults, pos=(4,5), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
