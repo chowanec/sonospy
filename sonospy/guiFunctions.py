@@ -30,9 +30,11 @@ def configMe(heading, term, integer=False, bool=False, parse=False):
 
         if parse == True:
             if fetchMe != "":
-                fetchMe = fetchMe.replace(", ", ",")
-                fetchMe = fetchMe.replace(",", "\n")
-                fetchMe = str(fetchMe + "\n")
+                if "," in fetchMe:
+                    fetchMe = fetchMe.replace(", ", ",")
+                    fetchMe = fetchMe.replace(",", "\n")
+                else:
+                    fetchMe = fetchMe
     else:
         if integer == True:
             return 1
@@ -49,12 +51,22 @@ def configMe(heading, term, integer=False, bool=False, parse=False):
 #        for option in config.options(section):
 #            print " ", option, "=", config.get(section, option)
 
+def configWrite(heading, term, value):
+    config = ConfigParser.ConfigParser()
+    config.read("GUIpref.ini")
+    config.set(heading, term, value)
+    with open('GUIpref.ini', 'wb') as configfile:
+        config.write(configfile)
+
 #-------------------------------------------------------------------------------
 # scrubDB
 #
 # Scours the provided path for *.db files to return back to the app so that we
 # can dynamically create widgets for the launch tab
 #-------------------------------------------------------------------------------
+
+
+
 import os
 
 def scrubDB(path):
@@ -74,3 +86,5 @@ def scrubDB(path):
 #-------------------------------------------------------------------------------
 def statusText(object, line):
     object.GetParent().GetParent().GetParent().SetStatusText(line)
+
+

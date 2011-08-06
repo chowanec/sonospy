@@ -5,6 +5,7 @@
 ###############################################################################
 # TODO:
 # - Windowsify the command line commands.
+# - Save as Default Button (with Functionality)
 ###############################################################################
 
 import wx
@@ -80,7 +81,7 @@ class ScanPanel(wx.Panel):
 
         self.bt_MainDatabase = wx.Button(panel, label="Browse...")
         self.bt_MainDatabase.SetToolTip(wx.ToolTip(help_Database))
-        sizer.Add(self.bt_MainDatabase, pos=(0, 5), flag=wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.bt_MainDatabase, pos=(0, 5), flag=wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
         self.bt_MainDatabase.Bind(wx.EVT_BUTTON, self.bt_MainDatabaseClick,self.bt_MainDatabase)
     # --------------------------------------------------------------------------
     # [1] Paths to scan for new Music ------------------------------------------
@@ -107,7 +108,7 @@ class ScanPanel(wx.Panel):
         self.bt_FoldersToScanClear = wx.Button(panel, label="Clear")
         help_FoldersToScanClear = "Clear the Folders to Scan field."
         self.bt_FoldersToScanClear.SetToolTip(wx.ToolTip(help_FoldersToScanClear))
-        sizer.Add(self.bt_FoldersToScanClear, pos=(2,5), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.bt_FoldersToScanClear, pos=(2,5), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
         self.bt_FoldersToScanClear.Bind(wx.EVT_BUTTON, self.bt_FoldersToScanClearClick, self.bt_FoldersToScanClear)
     # --------------------------------------------------------------------------
     # [3] Separator line -------------------------------------------------------
@@ -120,28 +121,36 @@ class ScanPanel(wx.Panel):
         help_ScanUpdate = "Click here to begin your scan of the folders listed above. This will create a new database if one doesn't exist. Otherwise it will update the database with any new music it finds."
         self.bt_ScanUpdate.SetToolTip(wx.ToolTip(help_ScanUpdate))
         self.bt_ScanUpdate.Bind(wx.EVT_BUTTON, self.bt_ScanUpdateClick, self.bt_ScanUpdate)
-        sizer.Add(self.bt_ScanUpdate, pos=(4,0), span=(1,2), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.bt_ScanUpdate, pos=(4,0), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
 
         # REPAIR
         self.bt_ScanRepair = wx.Button(panel, label="Repair")
         help_ScanRepair = "Click here to repair the 'Database' listed above."
         self.bt_ScanRepair.SetToolTip(wx.ToolTip(help_ScanRepair))
         self.bt_ScanRepair.Bind(wx.EVT_BUTTON, self.bt_ScanRepairClick, self.bt_ScanRepair)
-        sizer.Add(self.bt_ScanRepair, pos=(4,5), span=(1,2), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.bt_ScanRepair, pos=(4,1), span=(1,2), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
 
         # VERBOSE
         self.ck_ScanVerbose = wx.CheckBox(panel, label="Verbose")
         help_ScanVerbose = "Select this checkbox if you want to turn on the verbose settings during the scan."
         self.ck_ScanVerbose.SetToolTip(wx.ToolTip(help_ScanVerbose))
         self.ck_ScanVerbose.Value = guiFunctions.configMe("scan", "verbose", bool=True)
-        sizer.Add(self.ck_ScanVerbose, pos=(4,2), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.ck_ScanVerbose, pos=(4,3), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
 
         # SAVE LOG TO FILE
-        self.bt_SaveLog = wx.Button(panel, label="Save Log to File")
+        self.bt_SaveLog = wx.Button(panel, label="Save Log")
         help_SaveLogToFile = "Save the log below to a file."
         self.bt_SaveLog.SetToolTip(wx.ToolTip(help_SaveLogToFile))
         self.bt_SaveLog.Bind(wx.EVT_BUTTON, self.bt_SaveLogClick, self.bt_SaveLog)
         sizer.Add(self.bt_SaveLog, pos=(4,4), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=5)
+
+        # SAVE AS DEFAULTS
+        self.bt_SaveDefaults = wx.Button(panel, label="Save Defaults")
+        help_SaveDefaults = "Save the log below to a file."
+        self.bt_SaveDefaults.SetToolTip(wx.ToolTip(help_SaveDefaults))
+        self.bt_SaveDefaults.Bind(wx.EVT_BUTTON, self.bt_SaveDefaultsClick, self.bt_SaveDefaults)
+        sizer.Add(self.bt_SaveDefaults, pos=(4,5), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+
     # --------------------------------------------------------------------------
     # [5] Separator line ------------------------------------------------------
         hl_SepLine2 = wx.StaticLine(panel, 0, (250, 50), (300,1))
@@ -223,7 +232,7 @@ class ScanPanel(wx.Panel):
     def bt_FoldersToScanAddClick(self, event):
         dialog = wx.DirDialog(self, "Add a Directory...", style=wx.DD_DEFAULT_STYLE)
         if dialog.ShowModal() == wx.ID_OK:
-            self.multiText.AppendText("%s" % dialog.GetPath() + "\n")
+            self.multiText.AppendText("%s" % dialog.GetPath())
         dialog.Destroy()
         guiFunctions.statusText(self, "Folder: " + "%s" % dialog.GetPath() + " added.")
 
@@ -299,3 +308,22 @@ class ScanPanel(wx.Panel):
                     self.worker = WorkerThread(self)
                     self.setButtons(False)
 
+    def bt_SaveDefaultsClick(self, event):
+        section = "scan"
+
+        # Verbose setting
+        guiFunctions.configWrite(section, "verbose", self.ck_ScanVerbose.Value)
+
+        # Database setting
+        guiFunctions.configWrite(section, "database", self.tc_MainDatabase.Value)
+
+        # Folder setting, comma delineate multiple folder entries
+        folders = ""
+        numLines = 0
+        maxLines=(int(self.multiText.GetNumberOfLines()))
+        while (numLines < maxLines):
+            folders += str(self.multiText.GetLineText(numLines)) + ", "
+            numLines += 1
+        guiFunctions.configWrite(section, "folder", folders)
+
+        guiFunctions.statusText(self, "Defaults saved...")

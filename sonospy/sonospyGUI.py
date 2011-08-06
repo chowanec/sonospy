@@ -12,6 +12,7 @@ import scanTab
 import extractTab
 import launchTab
 import nowPlayingTab
+
 ################################################################################
 class SonospyNotebook(wx.Notebook):
     """
@@ -38,7 +39,7 @@ class SonospyFrame(wx.Frame):
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
-        wx.Frame.__init__(self, None, wx.ID_ANY, "Sonospy", size=(520,645))
+        wx.Frame.__init__(self, None, wx.ID_ANY, "Sonospy", size=(580,645))
         panel = wx.Panel(self)
 
         notebook = SonospyNotebook(panel)
