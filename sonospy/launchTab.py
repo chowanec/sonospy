@@ -157,18 +157,22 @@ class LaunchPanel(wx.Panel):
             for item in range(len(list_checkboxID)):
                 if wx.FindWindowById(list_checkboxID[item]).Value == True:
                     launchCMD += "-wSonospy=" + list_txtctrlLabel[item] + "," + list_checkboxLabel[item] + " "
-# DEBUG ------------------------------------------------------------------------
-            print launchCMD
-# ------------------------------------------------------------------------------
+
             # kludge to get me back to this directory
             launchCMD += ";cd -"
 
+# DEBUG ------------------------------------------------------------------------
+            print launchCMD
+# ------------------------------------------------------------------------------
+
         proc = subprocess.Popen([launchCMD],shell=True)
+
+
         if self.bt_Launch.Label == "Stop":
             self.bt_Launch.Label = "Launch"
-            self.statusText("Sonospy Service Stopped...")
+        #    self.statusText("Sonospy Service Stopped...")
         else:
             self.bt_Launch.Label = "Stop"
-            self.statusText("Sonospy Service Started...")
+        #    self.statusText("Sonospy Service Started...")
 
 

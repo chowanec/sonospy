@@ -56,7 +56,9 @@ import os
 
 def scrubDB(path):
     asps = []
-    for root, dirs, files in os.walk(os.getcwd()):
+    # replace "(path)" with os.path.abspath(os.path.join(path, os.path.pardir, os.path.pardir))
+    # when this goes in gui/linux
+    for root, dirs, files in os.walk(path):
         for file in files:
             if file.endswith('.db'):
                     asps.append(file)

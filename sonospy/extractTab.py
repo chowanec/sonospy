@@ -507,7 +507,7 @@ class ExtractPanel(wx.Panel):
                 if self.ck_ExtractVerbose.Value == True:
                     getOpts = "-v "
 
-                scanCMD = "./scan " + getOpts +"-d " + self.tc_MainDatabase.Value + " -x " + self.tc_TargetDatabase.Value + " -w " + searchCMD
+                scanCMD = "./scan.py " + getOpts +"-d " + self.tc_MainDatabase.Value + " -x " + self.tc_TargetDatabase.Value + " -w " + searchCMD
                 self.LogWindow.AppendText("\nExtracting from " + self.tc_MainDatabase.Value +" into " + self.tc_TargetDatabase.Value + "...\n\n")
 
 # DEBUG ------------------------------------------------------------------------
