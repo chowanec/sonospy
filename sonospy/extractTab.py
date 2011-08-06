@@ -45,8 +45,14 @@ class WorkerThread(Thread):
     def run(self):
         """Run Worker Thread."""
         proc = subprocess.Popen([scanCMD], shell=True,stdout=subprocess.PIPE)
-        for line in proc.communicate()[0]:
+        while True:
+            line = proc.stdout.readline()
             wx.PostEvent(self._notify_window, ResultEvent(line))
+            wx.Yield()
+            if not line: break
+        proc.wait()
+        wx.PostEvent(self._notify_window, ResultEvent(None))
+        return
         wx.PostEvent(self._notify_window, ResultEvent(None))
         return
 

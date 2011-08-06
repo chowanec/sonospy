@@ -48,9 +48,13 @@ class WorkerThread(Thread):
     def run(self):
         """Run Worker Thread."""
         proc = subprocess.Popen([scanCMD], shell=True,stdout=subprocess.PIPE)
-        for line in proc.communicate()[0]:
+
+        while True:
+            line = proc.stdout.readline()
             wx.PostEvent(self._notify_window, ResultEvent(line))
-            sys.stdout.flush()
+            wx.Yield()
+            if not line: break
+        proc.wait()
         wx.PostEvent(self._notify_window, ResultEvent(None))
         return
 
@@ -148,7 +152,6 @@ Scan Tab for running Sonospy Database Scans, Updates and Repairs
         sizer.Add(hl_SepLine2, pos=(5, 0), span=(1, 6), flag=wx.EXPAND, border=10)
     # --------------------------------------------------------------------------
     # [6] Output/Log Box -------------------------------------------------------
-# self.LogWindow = wx.PyShellOutput(panel, -1,"",size=(100, 300), style=wx.TE_MULTILINE|wx.TE_READONLY)
         self.LogWindow = wx.TextCtrl(panel, -1,"",size=(100, 300), style=wx.TE_MULTILINE|wx.TE_READONLY)
         help_LogWindow = "Results of a scan or repair will appear here."
         self.LogWindow.SetToolTip(wx.ToolTip(help_LogWindow))
@@ -163,6 +166,7 @@ Scan Tab for running Sonospy Database Scans, Updates and Repairs
         # Indicate we don't have a worker thread yet
         EVT_RESULT(self,self.onResult)
         self.worker = None
+
 
         sizer.AddGrowableCol(2)
         panel.SetSizer(sizer)
@@ -294,3 +298,4 @@ Toggle for the button states.
                 if not self.worker:
                     self.worker = WorkerThread(self)
                     self.setButtons(False)
+
