@@ -13,35 +13,37 @@ from wxPython.wx import *
 #
 # For reading and parsing the config file.
 #-------------------------------------------------------------------------------
-# TODO:
-# - Handle deleted config entries in ini file?
-# - Handle multi-line text box in config file?
-#-------------------------------------------------------------------------------
+
 import ConfigParser
 
-def configMe(tab, term, integer=False, bool=False, parse=False):
+def configMe(heading, term, integer=False, bool=False, parse=False):
     config = ConfigParser.ConfigParser()
     config.read("GUIpref.ini")
 
-    if integer == True:
-        fetchMe = config.getint(tab, term)
-    elif bool == True:
-        fetchMe = config.getboolean(tab, term)
+    if config.has_option(heading, term) == True:
+        if integer == True:
+            fetchMe = config.getint(heading, term)
+        elif bool == True:
+            fetchMe = config.getboolean(heading, term)
+        else:
+            fetchMe = config.get(heading, term)
+
+        if parse == True:
+            if fetchMe != "":
+                fetchMe = fetchMe.replace(", ", ",")
+                fetchMe = fetchMe.replace(",", "\n")
+                fetchMe = str(fetchMe + "\n")
     else:
-        fetchMe = config.get(tab, term)
+        if integer == True:
+            return 1
+        elif bool == True:
+            return 1
+        else:
+            return ""
 
-    if parse == True:
-        if fetchMe != "":
-            fetchMe = fetchMe.replace(", ", ",")
-            fetchMe = fetchMe.replace(",", "\n")
-            fetchMe = str(fetchMe + "\n")
+    return(fetchMe)
 
-    if fetchMe == NULL:
-        return 1;
-    else:
-        return(fetchMe)
-
-#    # dump entire config file
+#    Uncomment to dump entire config file
 #    for section in config.sections():
 #        print section
 #        for option in config.options(section):
