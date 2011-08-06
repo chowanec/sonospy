@@ -8,8 +8,6 @@
 # - Connect Show Duplicates
 # - Add refresh button
 # - Limit the max number of proxies based on what Mark is doing in his code.
-# - Add statusText() where appropriate.  Replace ERROR:?
-# - Add tooltips.
 ###############################################################################
 
 import wx
@@ -41,6 +39,8 @@ class LaunchPanel(wx.Panel):
     # [0] Make Header Columns --------------------------
         label_ProxyName = wx.StaticText(panel, label="Display Name")
         self.ck_EnableAll = wxCheckBox(panel, label="Enable All ")
+        help_EnableAll = "Click here to enable or disable all the databases below."
+        self.ck_EnableAll.SetToolTip(wx.ToolTip(help_EnableAll))
         self.ck_EnableAll.Bind(wx.EVT_CHECKBOX, self.enableAllChecks, self.ck_EnableAll)
         sizer.Add(label_ProxyName, pos=(xIndex, 2), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=10)
         sizer.Add(self.ck_EnableAll, pos=(xIndex, 0), span=(1,2), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=10)
@@ -68,10 +68,12 @@ class LaunchPanel(wx.Panel):
                 xIndex += 1
             else:
                 check = wx.CheckBox(self, -1, db)
+                check.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
                 sizer.Add(check, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
                 label = wx.StaticText(panel, label="")
                 sizer.Add(label, pos=(xIndex,1), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
                 name = wx.TextCtrl(panel)
+                name.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
                 #Set Temp Name
                 if db.endswith('.db'):
                     name.Value = db[:-3]
@@ -98,9 +100,15 @@ class LaunchPanel(wx.Panel):
     # [13] Create and add a launch button and radios for Proxy vs. Web
     # Eventually add "Use Sorts" and "Remove Dupes"
         self.bt_Launch = wx.Button(panel, label="Launch")
+        help_bt_Launch = "Click here to launch the Sonospy service."
+        self.bt_Launch.SetToolTip(wx.ToolTip(help_bt_Launch))
         self.bt_Launch.Bind(wx.EVT_BUTTON, self.bt_LaunchClick, self.bt_Launch)
         self.rd_Proxy = wx.RadioButton(panel, label="Proxy")
+        help_rd_Proxy = "Run only as a proxy service in the background."
+        self.rd_Proxy.SetToolTip(wx.ToolTip(help_rd_Proxy))
         self.rd_Web = wx.RadioButton(panel, label="Web")
+        help_rd_Web = "Run as the web interface to Sonospy."
+        self.rd_Web.SetToolTip(wx.ToolTip(help_rd_Web))
 
         if guiFunctions.configMe("launch", "proxy", bool=True) == True:
             self.rd_Proxy.SetValue(True)
@@ -164,14 +172,15 @@ class LaunchPanel(wx.Panel):
 
         proc = subprocess.Popen([launchCMD],shell=True)
 
-        # set back to original working directory
-        os.chdir(owd)
-
         if self.bt_Launch.Label == "Stop":
             self.bt_Launch.Label = "Launch"
-        #    self.statusText("Sonospy Service Stopped...")
+            self.bt_Launch.SetToolTip(wx.ToolTip("Click here to launch the Sonospy service."))
+            guiFunctions.statusText(self, "Sonospy Service Stopped...")
         else:
             self.bt_Launch.Label = "Stop"
-        #    self.statusText("Sonospy Service Started...")
+            self.bt_Launch.SetToolTip(wx.ToolTip("Click here to stop the Sonospy service."))
+            guiFunctions.statusText(self, "Sonospy Service Started...")
 
+        # set back to original working directory
+        os.chdir(owd)
 

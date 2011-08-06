@@ -4,11 +4,8 @@
 # Copyright, blah, blah
 ###############################################################################
 # TODO:
-# - STDOUT to LogView.Value in realtime. Broken in WorkerThread?
 # - Tons and tons of error checking (check for int on relevant fields)
-# - Add guiFunctions.statusText() where appropriate.  Replace ERROR:?
-# - Handle writing GUIPref.ini
-# - Handle deleted config entries in ini file?
+# - Use Blue's strategy of scrubbing the SQL database for valid fields?
 ###############################################################################
 
 import wx
@@ -53,8 +50,7 @@ class WorkerThread(Thread):
         proc.wait()
         wx.PostEvent(self._notify_window, ResultEvent(None))
         return
-        wx.PostEvent(self._notify_window, ResultEvent(None))
-        return
+
 
 class ExtractPanel(wx.Panel):
     """
@@ -345,6 +341,8 @@ class ExtractPanel(wx.Panel):
     # --------------------------------------------------------------------------
     # [5] Output/Log Box -------------------------------------------------------
         self.LogWindow = wx.TextCtrl(panel, -1,"",size=(100, 100), style=wx.TE_MULTILINE|wx.TE_READONLY)
+        LogFont = wx.Font(7.5, wx.SWISS, wx.NORMAL, wx.NORMAL, False)
+        self.LogWindow.SetFont(LogFont)
         help_LogWindow = "Results of a extract will appear here."
         self.LogWindow.SetToolTip(wx.ToolTip(help_LogWindow))
         self.LogWindow.SetInsertionPoint(0)
@@ -363,6 +361,7 @@ class ExtractPanel(wx.Panel):
         if event.data is None:
             # Thread aborted (using our convention of None return)
             self.LogWindow.AppendText("\n[Complete]\n\n")
+            guiFunctions.statusText(self, "Job Complete...")
             self.setButtons(True)
         else:
             # Process results here
@@ -381,6 +380,7 @@ class ExtractPanel(wx.Panel):
             for selection in selected:
                 self.tc_MainDatabase.Value = selection
         dialog.Destroy()
+        guiFunctions.statusText(self, "Main Database: " + selection + " selected...")
 
     def bt_TargetDatabaseClick(self, event):
         # Create a list of filters
@@ -394,6 +394,7 @@ class ExtractPanel(wx.Panel):
             for selection in selected:
                 self.tc_TargetDatabase.Value = selection
         dialog.Destroy()
+        guiFunctions.statusText(self, "Target Database: " + selection + " selected...")
 
     def setButtons(self, state):
         """
@@ -515,6 +516,7 @@ class ExtractPanel(wx.Panel):
 
                 scanCMD = "./scan.py " + getOpts +"-d " + self.tc_MainDatabase.Value + " -x " + self.tc_TargetDatabase.Value + " -w " + searchCMD
                 self.LogWindow.AppendText("\nExtracting from " + self.tc_MainDatabase.Value +" into " + self.tc_TargetDatabase.Value + "...\n\n")
+                guiFunctions.statusText(self, "Extracting from " + self.tc_MainDatabase.Value +" into " + self.tc_TargetDatabase.Value + "...")
 
 # DEBUG ------------------------------------------------------------------------
 #                self.LogWindow.AppendText(scanCMD)
@@ -535,3 +537,4 @@ class ExtractPanel(wx.Panel):
             saveMe = open(savefile, 'w')
             saveMe.write(self.LogWindow.Value)
             saveMe.close()
+            guiFunctions.statusText(self, "Logfile: " + savefile + " saved...")

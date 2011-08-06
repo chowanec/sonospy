@@ -4,10 +4,8 @@
 # Copyright, blah, blah
 ###############################################################################
 # TODO:
-# - STDOUT to LogView.Value in realtime. Broken in WorkerThread?
 # - Hangs on LARGE database read/writes. Maybe I am trying to push too
 # much at once to the LogWindow?
-# - Add guiFunctions.statusText() where appropriate. Replace ERROR:?
 ###############################################################################
 
 import wx
@@ -60,8 +58,8 @@ class WorkerThread(Thread):
 
 class ScanPanel(wx.Panel):
     """
-Scan Tab for running Sonospy Database Scans, Updates and Repairs
-"""
+    Scan Tab for running Sonospy Database Scans, Updates and Repairs
+    """
     #----------------------------------------------------------------------
     def __init__(self, parent):
         """"""
@@ -153,6 +151,8 @@ Scan Tab for running Sonospy Database Scans, Updates and Repairs
     # --------------------------------------------------------------------------
     # [6] Output/Log Box -------------------------------------------------------
         self.LogWindow = wx.TextCtrl(panel, -1,"",size=(100, 300), style=wx.TE_MULTILINE|wx.TE_READONLY)
+        LogFont = wx.Font(7.5, wx.SWISS, wx.NORMAL, wx.NORMAL, False)
+        self.LogWindow.SetFont(LogFont)
         help_LogWindow = "Results of a scan or repair will appear here."
         self.LogWindow.SetToolTip(wx.ToolTip(help_LogWindow))
         self.LogWindow.SetInsertionPoint(0)
@@ -176,6 +176,7 @@ Scan Tab for running Sonospy Database Scans, Updates and Repairs
         if event.data is None:
             # Thread aborted (using our convention of None return)
             self.LogWindow.AppendText("\n[Complete]\n\n")
+            guiFunctions.statusText(self, "Job Complete")
             self.setButtons(True)
         else:
             # Process results here
@@ -217,19 +218,20 @@ Scan Tab for running Sonospy Database Scans, Updates and Repairs
             selected = dialog.GetFilenames()
             for selection in selected:
                 self.tc_MainDatabase.Value = selection
-                guiFunctions.statusText(self, "Database selected...")
+                guiFunctions.statusText(self, "Database: " + selection + " selected...")
         dialog.Destroy()
 
 
     def bt_FoldersToScanAddClick(self, event):
         dialog = wx.DirDialog(self, "Add a Directory...", style=wx.DD_DEFAULT_STYLE)
-
         if dialog.ShowModal() == wx.ID_OK:
             self.multiText.AppendText("%s" % dialog.GetPath() + "\n")
         dialog.Destroy()
+        guiFunctions.statusText(self, "Folder: " + "%s" % dialog.GetPath() + " added.")
 
     def bt_FoldersToScanClearClick(self, event):
         self.multiText.Value = ""
+        guiFunctions.statusText(self, "Cleared folder list...")
 
     def bt_SaveLogClick(self, event):
         dialog = wx.FileDialog(self, message='Choose a file', style=wx.SAVE|wx.OVERWRITE_PROMPT)
@@ -239,11 +241,11 @@ Scan Tab for running Sonospy Database Scans, Updates and Repairs
             saveMe = open(savefile, 'w')
             saveMe.write(self.LogWindow.Value)
             saveMe.close()
-
+        guiFunctions.statusText(self, savefile + " saved...")
     def setButtons(self, state):
         """
-Toggle for the button states.
-"""
+        Toggle for the button states.
+        """
 
         if state == True:
             self.bt_FoldersToScanAdd.Enable()

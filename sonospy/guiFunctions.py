@@ -31,9 +31,10 @@ def configMe(tab, term, integer=False, bool=False, parse=False):
         fetchMe = config.get(tab, term)
 
     if parse == True:
-        fetchMe = fetchMe.replace(", ", ",")
-        fetchMe = fetchMe.replace(",", "\n")
-        fetchMe = str(fetchMe + "\n")
+        if fetchMe != "":
+            fetchMe = fetchMe.replace(", ", ",")
+            fetchMe = fetchMe.replace(",", "\n")
+            fetchMe = str(fetchMe + "\n")
 
     if fetchMe == NULL:
         return 1;

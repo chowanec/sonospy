@@ -5,12 +5,14 @@
 ###############################################################################
 # TODO lists are stored in individual files in the second import line below.
 ###############################################################################
-
 import wx, sys
-import scanTab, extractTab, launchTab, nowPlayingTab
 from wxPython.wx import *
-
-########################################################################
+################################################################################
+import scanTab
+import extractTab
+import launchTab
+import nowPlayingTab
+################################################################################
 class SonospyNotebook(wx.Notebook):
     """
     The core layout for the app -- notebook pages are slotted here
