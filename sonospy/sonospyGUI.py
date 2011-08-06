@@ -5,7 +5,7 @@
 ###############################################################################
 # TODO lists are stored in individual files in the second import line below.
 ###############################################################################
-import wx, sys
+import wx
 from wxPython.wx import *
 ################################################################################
 import scanTab
