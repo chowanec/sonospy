@@ -56,7 +56,8 @@ import os
 
 def scrubDB(path):
     asps = []
-    for root, dirs, files in os.walk(os.getcwd()):
+    # the os.walk part backs up two directories to get to the sonospy/ folder
+    for root, dirs, files in os.walk(os.path.abspath(os.path.join(path, os.path.pardir, os.path.pardir))):
         for file in files:
             if file.endswith('.db'):
                     asps.append(file)
