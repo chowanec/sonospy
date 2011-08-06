@@ -11,7 +11,6 @@
 import wx
 from wxPython.wx import *
 import os
-import sys
 import subprocess
 from threading import *
 import guiFunctions
