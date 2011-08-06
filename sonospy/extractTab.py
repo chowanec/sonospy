@@ -6,6 +6,7 @@
 # TODO:
 # - Tons and tons of error checking (check for int on relevant fields)
 # - Use Blue's strategy of scrubbing the SQL database for valid fields?
+# - Windowsify the command line commands.
 ###############################################################################
 
 import wx
@@ -507,8 +508,8 @@ class ExtractPanel(wx.Panel):
                             if illegal in self.tc_TargetDatabase.Value:
                                 self.LogWindow.AppendText("\nERROR:\tInvalid target database! You cannot use " + illegal + " in the database name.")
                                 return(1)
-                        delME = "rm -I " + self.tc_TargetDatabase.Value
-                        proc = subprocess.Popen([delME],shell=True,stdout=subprocess.PIPE)
+                        self.LogWindow.AppendText("\nRemoving file: " + self.tc_TargetDatabase.Value + " because 'Overwrite' is checked.")
+                        os.remove(self.tc_TargetDatabase.Value)
 
                 getOpts = ""
                 if self.ck_ExtractVerbose.Value == True:

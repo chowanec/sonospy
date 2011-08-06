@@ -4,8 +4,7 @@
 # Copyright, blah, blah
 ###############################################################################
 # TODO:
-# - Hangs on LARGE database read/writes. Maybe I am trying to push too
-# much at once to the LogWindow?
+# - Windowsify the command line commands.
 ###############################################################################
 
 import wx
