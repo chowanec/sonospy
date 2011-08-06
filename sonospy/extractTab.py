@@ -75,11 +75,11 @@ class ExtractPanel(wx.Panel):
         self.tc_MainDatabase = wx.TextCtrl(panel)
         self.tc_MainDatabase.SetToolTip(wx.ToolTip(help_MainDatabase))
         self.tc_MainDatabase.Value = guiFunctions.configMe("extract", "database_source")
-        sizer.Add(self.tc_MainDatabase, pos=(0, 1), span=(1, 4), flag=wx.TOP|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.tc_MainDatabase, pos=(0, 1), span=(1, 3), flag=wx.TOP|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, border=10)
 
         self.bt_MainDatabase = wx.Button(panel, label="Browse...")
         self.bt_MainDatabase.SetToolTip(wx.ToolTip(help_MainDatabase))
-        sizer.Add(self.bt_MainDatabase, pos=(0, 5), flag=wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.bt_MainDatabase, pos=(0, 4), flag=wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
         self.bt_MainDatabase.Bind(wx.EVT_BUTTON, self.bt_MainDatabaseClick, self.bt_MainDatabase)
     # --------------------------------------------------------------------------
     # [1] Target Database Label, Entry and Browse Button -----------------------
@@ -98,8 +98,8 @@ class ExtractPanel(wx.Panel):
 
         # Add them to the sizer.
         sizer.Add(label_TargetDatabase, pos=(1, 0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=10)
-        sizer.Add(self.tc_TargetDatabase, pos=(1, 1), span=(1, 4), flag=wx.TOP|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(self.bt_TargetDatabase, pos=(1, 5), flag=wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.tc_TargetDatabase, pos=(1, 1), span=(1, 3), flag=wx.TOP|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.bt_TargetDatabase, pos=(1, 4), flag=wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
 
         # Bind the button to a click event
         self.bt_TargetDatabase.Bind(wx.EVT_BUTTON, self.bt_TargetDatabaseClick,self.bt_TargetDatabase)
@@ -123,7 +123,7 @@ class ExtractPanel(wx.Panel):
 
         self.combo_LogicalCreated = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
         self.combo_LogicalCreated.SetToolTip(wx.ToolTip(help_Created))
-        self.combo_LogicalCreated.Select(guiFunctions.configMe("extract", "createdIdx", integer=True))
+        self.combo_LogicalCreated.Select(guiFunctions.configMe("extract", "createdidx", integer=True))
 
         self.tc_DaysAgoCreated = wx.TextCtrl(panel)
         self.tc_DaysAgoCreated.SetToolTip(wx.ToolTip(help_Created))
@@ -147,7 +147,6 @@ class ExtractPanel(wx.Panel):
         self.combo_LogicalInserted = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
         self.combo_LogicalInserted.SetToolTip(wx.ToolTip(help_Inserted))
         self.combo_LogicalInserted.Select(guiFunctions.configMe("extract", "insertedIdx", integer=True))
-
         self.tc_DaysAgoInserted = wx.TextCtrl(panel)
         self.tc_DaysAgoInserted.SetToolTip(wx.ToolTip(help_Inserted))
         self.tc_DaysAgoInserted.Value = guiFunctions.configMe("extract", "insertedVal")
@@ -169,13 +168,14 @@ class ExtractPanel(wx.Panel):
 
         self.combo_LogicalModified = wx.ComboBox(panel, 1, "", (25, 25), (60, 25), logicList, wx.CB_DROPDOWN)
         self.combo_LogicalModified.SetToolTip(wx.ToolTip(help_Modified))
-        self.combo_LogicalModified.Select(guiFunctions.configMe("extract", "modifiedIdx", integer=True))
+        self.combo_LogicalModified.Select(guiFunctions.configMe("extract", "modifiedidx", integer=True))
 
         self.tc_DaysAgoModified = wx.TextCtrl(panel)
         self.tc_DaysAgoModified.SetToolTip(wx.ToolTip(help_Modified))
 
         label_DaysAgoModified = wx.StaticText(panel, label="days ago")
         label_DaysAgoModified.SetToolTip(wx.ToolTip(help_Modified))
+        self.tc_DaysAgoModified.Value = guiFunctions.configMe("extract", "modifiedval")
 
         # Add them to the sizer (optionBoxSizer)
         OptionBoxSizer.Add(label_OptionsModified, pos=(sizerIndexX, 0), flag=wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=0)
@@ -330,10 +330,17 @@ class ExtractPanel(wx.Panel):
         self.ck_OverwriteExisting.SetToolTip(wx.ToolTip(help_Overwrite))
         self.ck_OverwriteExisting.Value = guiFunctions.configMe("extract", "overwrite", bool=True)
 
+        # SAVE AS DEFAULTS
+        self.bt_SaveDefaults = wx.Button(panel, label="Save Defaults")
+        help_SaveDefaults = "Save current settings as default."
+        self.bt_SaveDefaults.SetToolTip(wx.ToolTip(help_SaveDefaults))
+        self.bt_SaveDefaults.Bind(wx.EVT_BUTTON, self.bt_SaveDefaultsClick, self.bt_SaveDefaults)
+
         sizer.Add(self.bt_Extract, pos=(3,0), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.bt_SaveLog, pos=(3,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.RIGHT, border=10)
         sizer.Add(self.ck_ExtractVerbose, pos=(3,2), flag=wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.ck_OverwriteExisting, pos=(3,3), flag=wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(self.bt_SaveLog, pos=(3,1), flag=wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.RIGHT, border=10)
+        sizer.Add(self.bt_SaveDefaults, pos=(3,4), flag=wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
 
     # --------------------------------------------------------------------------
     # [4] Separator line ------------------------------------------------------
@@ -539,3 +546,29 @@ class ExtractPanel(wx.Panel):
             saveMe.write(self.LogWindow.Value)
             saveMe.close()
             guiFunctions.statusText(self, "Logfile: " + savefile + " saved...")
+
+    def bt_SaveDefaultsClick(self, event):
+        section = "extract"
+
+        guiFunctions.configWrite(section, "database_source", self.tc_MainDatabase.Value)
+        guiFunctions.configWrite(section, "database_target", self.tc_TargetDatabase.Value)
+        guiFunctions.configWrite(section, "createdidx", self.combo_LogicalCreated.GetCurrentSelection())
+        guiFunctions.configWrite(section, "createdval", self.tc_DaysAgoCreated.Value)
+        guiFunctions.configWrite(section, "insertedidx", self.combo_LogicalInserted.GetCurrentSelection())
+        guiFunctions.configWrite(section, "insertedval", self.tc_DaysAgoInserted.Value)
+        guiFunctions.configWrite(section, "modifiedidx", self.combo_LogicalModified.GetCurrentSelection())
+        guiFunctions.configWrite(section, "modifiedval", self.tc_DaysAgoModified.Value)
+        guiFunctions.configWrite(section, "accessedidx", self.combo_LogicalAccessed.GetCurrentSelection())
+        guiFunctions.configWrite(section, "accessedval", self.tc_DaysAgoAccessed.Value)
+        guiFunctions.configWrite(section, "yearidx", self.combo_LogicalYear.GetCurrentSelection())
+        guiFunctions.configWrite(section, "yearval", self.tc_Year.Value)
+        guiFunctions.configWrite(section, "genre", self.tc_Genre.Value)
+        guiFunctions.configWrite(section, "artist", self.tc_Artist.Value)
+        guiFunctions.configWrite(section, "composer", self.tc_Composer.Value)
+        guiFunctions.configWrite(section, "bitrateidx", self.combo_LogicalBitrate.GetCurrentSelection())
+        guiFunctions.configWrite(section, "bitrateval", self.tc_Bitrate.Value)
+        guiFunctions.configWrite(section, "last", self.tc_Last.Value)
+        guiFunctions.configWrite(section, "verbose", self.ck_ExtractVerbose.Value)
+        guiFunctions.configWrite(section, "overwrite", self.ck_OverwriteExisting.Value)
+
+        guiFunctions.statusText(self, "Defaults saved...")
