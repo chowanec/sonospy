@@ -4,7 +4,8 @@
 # Copyright, blah, blah
 ###############################################################################
 # TODO:
-# - Windowsify the command line commands.
+# - Windowsify the commands to run properly -- namely pOpen and how
+#   to capture stdout?
 ###############################################################################
 
 import wx

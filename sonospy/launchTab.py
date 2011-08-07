@@ -6,6 +6,8 @@
 # TODO:
 # - Connect Show Duplicates
 # - Add refresh button (deprecated due to new 8 tc max)
+# - Windowsify the commands to run properly -- namely pOpen and how
+#   to capture stdout?
 ###############################################################################
 
 import wx
@@ -49,10 +51,15 @@ class LaunchPanel(wx.Panel):
         self.ck_EnableAll = wxCheckBox(panel, label="Enable All ")
         help_EnableAll = "Click here to enable or disable all the databases below."
         self.ck_EnableAll.SetToolTip(wx.ToolTip(help_EnableAll))
+        self.bt_AutoPopulate = wx.Button(panel, label="Auto Populate")
+        help_AutoPopulate = "Autopopulate with up to 8 found database files."
+        self.bt_AutoPopulate.SetToolTip(wx.ToolTip(help_AutoPopulate))
+        self.bt_AutoPopulate.Bind(wx.EVT_BUTTON, self.bt_AutoPopulateClick, self.bt_AutoPopulate)
 
         self.ck_EnableAll.Bind(wx.EVT_CHECKBOX, self.enableAllChecks, self.ck_EnableAll)
         sizer.Add(label_ProxyName, pos=(xIndex, 1), flag=wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=10)
         sizer.Add(self.ck_EnableAll, pos=(xIndex, 0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=10)
+        sizer.Add(self.bt_AutoPopulate, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=10)
 
         xIndex +=1
     # --------------------------------------------------------------------------
@@ -353,43 +360,6 @@ class LaunchPanel(wx.Panel):
 
         xIndex +=1
 
-#   If you want to autogenerate DB list and increment sizer Index, uncomment
-#   the below
-
-#     Get a count of *.db from the filesystem
-#        numDB = guiFunctions.scrubDB(os.getcwd())
-#
-#        # Checkbox (enable, disable for launch)
-#        # textCtrl (for Proxy name in controller)
-#        # database name (based on *.db)
-#        for db in numDB:
-#            if xIndex >= 12:
-#                pass
-#                xIndex += 1
-#            else:
-#                check = wx.CheckBox(self, -1, db)
-#                check.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
-#                sizer.Add(check, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
-#                label = wx.StaticText(panel, label="")
-#                sizer.Add(label, pos=(xIndex,1), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
-#                name = wx.TextCtrl(panel)
-#                name.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
-#                #Set Temp Name
-#                if db.endswith('.db'):
-#                    name.Value = db[:-3]
-#                sizer.Add(name, pos=(xIndex,2), span=(1,3),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
-#                xIndex +=1
-#
-#            #-------------------------------------------------------
-#            # Save references to the widgets created dynamically
-#                list_checkboxID.append(check.GetId())
-#                list_checkboxLabel.append(check.GetLabel())
-#                list_txtctrlID.append(name.GetId())
-#                list_txtctrlLabel.append(name.Value)
-#
-#            # Bind to event for later (DEBUG)
-#                check.Bind(wx.EVT_CHECKBOX, self.OnCheck, check)
-
     # --------------------------------------------------------------------------
     # [12] Separator line ------------------------------------------------------
 
@@ -549,3 +519,59 @@ class LaunchPanel(wx.Panel):
         guiFunctions.configWrite(section, "db8_proxyname", self.tc_DB8.Value)
 
         guiFunctions.statusText(self, "Defaults saved...")
+
+    def bt_AutoPopulateClick(self, event):
+#   If you want to autogenerate DB list and increment sizer Index, uncomment
+#   the below
+
+#   Get a count of *.db from the filesystem
+        numDB = guiFunctions.scrubDB(os.getcwd())
+        curCount = 1
+        # Checkbox (enable, disable for launch)
+        # textCtrl (for Proxy name in controller)
+        # database name (based on *.db)
+        for db in numDB:
+
+            if curCount >= 8:
+                pass
+            if curCount == 1:
+                ck = self.ck_DB1
+                tc = self.tc_DB1
+            if curCount == 2:
+                ck = self.ck_DB2
+                tc = self.tc_DB2
+            if curCount == 3:
+                ck = self.ck_DB3
+                tc = self.tc_DB3
+            if curCount == 4:
+                ck = self.ck_DB4
+                tc = self.tc_DB4
+            if curCount == 5:
+                ck = self.ck_DB5
+                tc = self.tc_DB5
+            if curCount == 6:
+                ck = self.ck_DB6
+                tc = self.tc_DB6
+            if curCount == 7:
+                ck = self.ck_DB7
+                tc = self.tc_DB7
+            if curCount == 8:
+                ck = self.ck_DB8
+                tc = self.tc_DB8
+            else:
+                if db.endswith('.db'):
+                    tc.Value = db[:-3]
+                ck.Label = db
+                ck.Enable()
+                ck.Value = True
+            curCount +=1
+            
+#            #-------------------------------------------------------
+#            # Save references to the widgets created dynamically
+#                list_checkboxID.append(check.GetId())
+#                list_checkboxLabel.append(check.GetLabel())
+#                list_txtctrlID.append(name.GetId())
+#                list_txtctrlLabel.append(name.Value)
+#
+#            # Bind to event for later (DEBUG)
+#                check.Bind(wx.EVT_CHECKBOX, self.OnCheck, check)

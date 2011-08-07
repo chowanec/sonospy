@@ -6,6 +6,8 @@
 # TODO:
 # - Tons and tons of error checking (check for int on relevant fields)
 # - Use Blue's strategy of scrubbing the SQL database for valid fields?
+# - Windowsify the commands to run properly -- namely pOpen and how
+#   to capture stdout?
 ###############################################################################
 
 import wx
