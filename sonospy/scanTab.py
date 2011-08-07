@@ -308,7 +308,10 @@ class ScanPanel(wx.Panel):
                 self.LogWindow.AppendText("Running Scan...\n\n")
                 guiFunctions.statusText(self, "Running Scan...")
                 while (numLines < maxLines):
-                    scanCMD += str(self.multiText.GetLineText(numLines)) + " "
+                    if os.name == "nt":
+                        scanCMD += "\"" + str(self.multiText.GetLineText(numLines)) + "\" "
+                    else:
+                        scanCMD += "\"" + str(self.multiText.GetLineText(numLines)).replace(" ", "\ ") + "\" "
                     numLines += 1
 
 # Multithreading is below this line.
