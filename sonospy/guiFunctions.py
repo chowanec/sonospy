@@ -9,9 +9,9 @@
 from wxPython.wx import *
 
 #-------------------------------------------------------------------------------
-# configMe
+# configMe, configWrite
 #
-# For reading and parsing the config file.
+# For reading, parsing and writing the config file.
 #-------------------------------------------------------------------------------
 
 import ConfigParser
@@ -64,9 +64,6 @@ def configWrite(heading, term, value):
 # Scours the provided path for *.db files to return back to the app so that we
 # can dynamically create widgets for the launch tab
 #-------------------------------------------------------------------------------
-
-
-
 import os
 
 def scrubDB(path):
