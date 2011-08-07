@@ -5,7 +5,6 @@
 ###############################################################################
 # TODO:
 # - Windowsify the command line commands.
-# - Save as Default Button (with Functionality)
 ###############################################################################
 
 import wx
