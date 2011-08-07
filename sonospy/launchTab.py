@@ -1,11 +1,31 @@
 ###############################################################################
 # Launch Tab for use with sonospyGUI.py
 ###############################################################################
-# Copyright, blah, blah
+# launchTab.py copyright (c) 2010-2011 John Chowanec
+# mutagen copyright (c) 2005 Joe Wreschnig, Michael Urman (mutagen is Licensed under GPL version 2.0)
+# Sonospy Project copyright (c) 2010-2011 Mark Henkelis
+#   (specifics for this file: sonospy_proxy, sonospy_web, sonospy_stop)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# guiFunctions.py Author: John Chowanec <chowanec@gmail.com>
+# sonospy_proxy Author: Mark Henkelis <mark.henkelis@tesco.net>
+# sonospy_stop Author: Mark Henkelis <mark.henkelis@tesco.net>
+# sonospy_web Author: Mark Henkelis <mark.henkelis@tesco.net>
 ###############################################################################
 # TODO:
 # - Connect Show Duplicates
-# - Add refresh button (deprecated due to new 8 tc max)
 # - Windowsify the commands to run properly -- namely pOpen and how
 #   to capture stdout?
 ###############################################################################
