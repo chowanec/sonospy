@@ -6,7 +6,6 @@
 # TODO:
 # - Connect Show Duplicates
 # - Add refresh button (deprecated due to new 8 tc max)
-# - Windowsify the command line commands.
 ###############################################################################
 
 import wx
@@ -434,7 +433,7 @@ class LaunchPanel(wx.Panel):
         panel.SetSizer(sizer)
 
     def browseDB(self, event):
-        filters = 'Text files (*.db)|*.db|All files (*.*)|*.*'
+        filters = 'Sonospy files (*.db)|*.db|All files (*.*)|*.*'
         dialog = wx.FileDialog ( None, message = 'Select Database File...', wildcard = filters, style = wxOPEN)
 
         # Open Dialog Box and get Selection
@@ -475,7 +474,13 @@ class LaunchPanel(wx.Panel):
         owd = os.getcwd()
         os.chdir(os.pardir)
 
-        launchCMD = "./sonospy_"
+        # Check for OS
+        if os.name == 'nt':
+            cmdroot = 'python '
+        else:
+            cmdroot = './'
+
+        launchCMD = cmdroot + "sonospy_"
 
         # which version are we running?
         if self.rd_Proxy.Value == True:
@@ -490,7 +495,7 @@ class LaunchPanel(wx.Panel):
             
         # build out the command
         if self.bt_Launch.Label == "Stop":
-            launchCMD = "./sonospy_stop"
+            launchCMD = cmdroot + "sonospy_stop"
         else:
             for item in range(len(list_checkboxID)):
                 if wx.FindWindowById(list_checkboxID[item]).Value == True:

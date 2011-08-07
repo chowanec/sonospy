@@ -379,7 +379,7 @@ class ExtractPanel(wx.Panel):
 
     def bt_MainDatabaseClick(self, event):
         # Create a list of filters
-        filters = 'Text files (*.db)|*.db|All files (*.*)|*.*'
+        filters = 'Sonospy files (*.db)|*.db|All files (*.*)|*.*'
         dialog = wx.FileDialog ( None, message = 'Select Database File...', wildcard = filters, style = wxOPEN)
 
         # Open Dialog Box and get Selection
@@ -392,7 +392,7 @@ class ExtractPanel(wx.Panel):
 
     def bt_TargetDatabaseClick(self, event):
         # Create a list of filters
-        filters = 'Text files (*.db)|*.db|All files (*.*)|*.*'
+        filters = 'Sonospy files (*.db)|*.db|All files (*.*)|*.*'
         dialog = wx.FileDialog ( None, message = 'Select Database File...',
             wildcard = filters, style = wxOPEN )
 
@@ -428,12 +428,14 @@ class ExtractPanel(wx.Panel):
     def bt_ExtractClick(self, event):
         global scanCMD
         global getOpts
+
+        if os.name == 'nt':
+            cmdroot = 'python '
+        else:
+            cmdroot = './'
+
         self.LogWindow.Enable()
 
-# DEBUG ------------------------------------------------------------------------
-#        self.tc_MainDatabase.Value = "test.db"
-#        self.tc_TargetDatabase.Value = "test2.db"
-# ------------------------------------------------------------------------------
         if self.tc_MainDatabase.Value == "":
             self.LogWindow.AppendText("ERROR:\tNo source database name selected!\n")
         elif self.tc_TargetDatabase.Value == "":
@@ -522,7 +524,7 @@ class ExtractPanel(wx.Panel):
                 if self.ck_ExtractVerbose.Value == True:
                     getOpts = "-v "
 
-                scanCMD = "./scan.py " + getOpts +"-d " + self.tc_MainDatabase.Value + " -x " + self.tc_TargetDatabase.Value + " -w " + searchCMD
+                scanCMD = cmdroot + "scan.py " + getOpts +"-d " + self.tc_MainDatabase.Value + " -x " + self.tc_TargetDatabase.Value + " -w " + searchCMD
                 self.LogWindow.AppendText("\nExtracting from " + self.tc_MainDatabase.Value +" into " + self.tc_TargetDatabase.Value + "...\n\n")
                 guiFunctions.statusText(self, "Extracting from " + self.tc_MainDatabase.Value +" into " + self.tc_TargetDatabase.Value + "...")
 

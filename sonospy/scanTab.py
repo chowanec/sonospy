@@ -65,7 +65,6 @@ class ScanPanel(wx.Panel):
 
         panel = self
         sizer = wx.GridBagSizer(6, 5)
-        self.currentDirectory = os.getcwd()
 
     # [0] Main Database Text, Entry and Browse Button --------------------------
         label_MainDatabase = wx.StaticText(panel, label="Database:")
@@ -198,6 +197,11 @@ class ScanPanel(wx.Panel):
         global scanCMD
         getOpts = ""
 
+        if os.name == 'nt':
+            cmdroot = 'python '
+        else:
+            cmdroot = './'
+
         self.LogWindow.Enable()
         if self.tc_MainDatabase.Value == "":
             self.LogWindow.AppendText("ERROR:\tNo database name selected!\n")
@@ -205,7 +209,7 @@ class ScanPanel(wx.Panel):
             if self.ck_ScanVerbose.Value == True:
                 getOpts = "-v "
 
-            scanCMD = "./scan.py " + getOpts +"-d " + self.tc_MainDatabase.Value + " -r"
+            scanCMD = cmdroot + "scan.py " + getOpts +"-d " + self.tc_MainDatabase.Value + " -r"
 
             self.LogWindow.AppendText("Running Repair on " + self.tc_MainDatabase.Value + "...\n\n")
             guiFunctions.statusText(self, "Running Repair...")
@@ -216,7 +220,7 @@ class ScanPanel(wx.Panel):
                 wx.SetCursor(wx.StockCursor(wx.CURSOR_WATCH))
 
     def bt_MainDatabaseClick(self, event):
-        filters = 'Text files (*.db)|*.db|All files (*.*)|*.*'
+        filters = 'Sonospy files (*.db)|*.db|All files (*.*)|*.*'
         dialog = wx.FileDialog ( None, message = 'Select Database File...', wildcard = filters, style = wxOPEN)
 
         # Open Dialog Box and get Selection
@@ -248,6 +252,7 @@ class ScanPanel(wx.Panel):
             saveMe.write(self.LogWindow.Value)
             saveMe.close()
         guiFunctions.statusText(self, savefile + " saved...")
+
     def setButtons(self, state):
         """
         Toggle for the button states.
@@ -272,8 +277,12 @@ class ScanPanel(wx.Panel):
             self.ck_ScanVerbose.Disable()
             wx.SetCursor(wx.StockCursor(wx.CURSOR_WATCH))
 
-
     def bt_ScanUpdateClick(self, event):
+        if os.name == 'nt':
+            cmdroot = 'python '
+        else:
+            cmdroot = './'
+
         self.LogWindow.Enable()
 
 # DEBUG ------------------------------------------------------------------------
@@ -288,7 +297,7 @@ class ScanPanel(wx.Panel):
                 getOpts = "-v "
 
             global scanCMD
-            scanCMD = "./scan.py " + getOpts +"-d " + self.tc_MainDatabase.Value + " "
+            scanCMD = cmdroot + "scan.py " + getOpts +"-d " + self.tc_MainDatabase.Value + " "
 
             numLines=0
             maxLines=(int(self.multiText.GetNumberOfLines()))
