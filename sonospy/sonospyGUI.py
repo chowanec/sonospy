@@ -4,7 +4,7 @@
 ###############################################################################
 # Copyright, blah, blah
 ###############################################################################
-# TODO lists are stored in individual files in the second import line below.
+# TODO: Kill sonsopy process on window close.
 ###############################################################################
 import wx
 from wxPython.wx import *
@@ -57,6 +57,24 @@ class SonospyFrame(wx.Frame):
 
         self.Show()
         self.Centre()
+
+    def OnCloseWindow(self, event):
+    # tell the window to kill itself and kill the running sonospy process
+        owd = os.getcwd()
+        os.chdir(os.pardir)
+
+        if os.name == 'nt':
+            cmdroot = 'python '
+        else:
+            cmdroot = './'
+        
+        launchCMD = cmdroot + "sonospy_stop"
+        
+        proc = subprocess.Popen([launchCMD],shell=True)
+        os.chdir(owd)
+
+        self.Destroy()
+
 #----------------------------------------------------------------------
 if __name__ == "__main__":
     app = wx.PySimpleApp()
