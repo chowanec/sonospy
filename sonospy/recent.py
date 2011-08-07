@@ -67,7 +67,12 @@ def main():
                         return(1)
                 os.remove(sys.argv[2])
 
-    scanCMD = "./scan.py " + "-d " + sys.argv[1] + " -x " + sys.argv[2] + " -w " + searchCMD
+    if os.name == 'nt':
+        cmdroot = 'python '
+    else:
+        cmdroot = './'
+
+    scanCMD = cmdroot + "scan.py " + "-d " + sys.argv[1] + " -x " + sys.argv[2] + " -w " + searchCMD
 
     sub = subprocess.Popen([scanCMD], shell=True).wait()
     return sub
