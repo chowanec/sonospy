@@ -46,7 +46,9 @@ class SonospyFrame(wx.Frame):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(notebook, 1, wx.ALL|wx.EXPAND, 5)
         panel.SetSizer(sizer)
-
+        ib = wx.IconBundle()
+        ib.AddIconFromFile("sonospy.png", wx.BITMAP_TYPE_ANY)
+        self.SetIcons(ib)
         self.CreateStatusBar(style=0)
         self.SetStatusText("Welcome to Sonospy...")
         
