@@ -76,10 +76,17 @@ class LaunchPanel(wx.Panel):
         self.bt_AutoPopulate.SetToolTip(wx.ToolTip(help_AutoPopulate))
         self.bt_AutoPopulate.Bind(wx.EVT_BUTTON, self.bt_AutoPopulateClick, self.bt_AutoPopulate)
 
+        self.bt_Clear = wx.Button(panel, label="Clear")
+        help_Clear = "Clear database fields."
+        self.bt_Clear.SetToolTip(wx.ToolTip(help_Clear))
+        self.bt_Clear.Bind(wx.EVT_BUTTON, self.bt_ClearClick, self.bt_Clear)
+
         self.ck_EnableAll.Bind(wx.EVT_CHECKBOX, self.enableAllChecks, self.ck_EnableAll)
         sizer.Add(label_ProxyName, pos=(xIndex, 1), flag=wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=10)
         sizer.Add(self.ck_EnableAll, pos=(xIndex, 0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=10)
         sizer.Add(self.bt_AutoPopulate, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.TOP, border=10)
+        sizer.Add(self.bt_Clear, pos=(xIndex, 2), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.TOP|wx.ALIGN_RIGHT, border=10)
+
 
         xIndex +=1
     # --------------------------------------------------------------------------
@@ -102,7 +109,7 @@ class LaunchPanel(wx.Panel):
         self.bt_DB1.tc = self.tc_DB1
         self.bt_DB1.ck = self.ck_DB1
 
-        sizer.Add(self.ck_DB1, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.ck_DB1, pos=(xIndex,0), flag=wx.EXPAND|wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.tc_DB1, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.bt_DB1, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
 
@@ -138,7 +145,7 @@ class LaunchPanel(wx.Panel):
         self.bt_DB2.tc = self.tc_DB2
         self.bt_DB2.ck = self.ck_DB2
 
-        sizer.Add(self.ck_DB2, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.ck_DB2, pos=(xIndex,0), flag=wx.EXPAND|wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.tc_DB2, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.bt_DB2, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
 
@@ -174,7 +181,7 @@ class LaunchPanel(wx.Panel):
         self.bt_DB3.tc = self.tc_DB3
         self.bt_DB3.ck = self.ck_DB3
 
-        sizer.Add(self.ck_DB3, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.ck_DB3, pos=(xIndex,0), flag=wx.EXPAND|wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.tc_DB3, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.bt_DB3, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
 
@@ -210,7 +217,7 @@ class LaunchPanel(wx.Panel):
         self.bt_DB4.tc = self.tc_DB4
         self.bt_DB4.ck = self.ck_DB4
 
-        sizer.Add(self.ck_DB4, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.ck_DB4, pos=(xIndex,0), flag=wx.EXPAND|wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.tc_DB4, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.bt_DB4, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
 
@@ -246,7 +253,7 @@ class LaunchPanel(wx.Panel):
         self.bt_DB5.tc = self.tc_DB5
         self.bt_DB5.ck = self.ck_DB5
 
-        sizer.Add(self.ck_DB5, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.ck_DB5, pos=(xIndex,0), flag=wx.EXPAND|wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.tc_DB5, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.bt_DB5, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
 
@@ -282,7 +289,7 @@ class LaunchPanel(wx.Panel):
         self.bt_DB6.tc = self.tc_DB6
         self.bt_DB6.ck = self.ck_DB6
 
-        sizer.Add(self.ck_DB6, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.ck_DB6, pos=(xIndex,0), flag=wx.EXPAND|wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.tc_DB6, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.bt_DB6, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
 
@@ -318,7 +325,7 @@ class LaunchPanel(wx.Panel):
         self.bt_DB7.tc = self.tc_DB7
         self.bt_DB7.ck = self.ck_DB7
 
-        sizer.Add(self.ck_DB7, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.ck_DB7, pos=(xIndex,0), flag=wx.EXPAND|wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.tc_DB7, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.bt_DB7, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
 
@@ -354,7 +361,7 @@ class LaunchPanel(wx.Panel):
         self.bt_DB8.tc = self.tc_DB8
         self.bt_DB8.ck = self.ck_DB8
 
-        sizer.Add(self.ck_DB8, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.ck_DB8, pos=(xIndex,0), flag=wx.EXPAND|wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.tc_DB8, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
         sizer.Add(self.bt_DB8, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
 
@@ -595,3 +602,10 @@ class LaunchPanel(wx.Panel):
 #
 #            # Bind to event for later (DEBUG)
 #                check.Bind(wx.EVT_CHECKBOX, self.OnCheck, check)
+
+    def bt_ClearClick(self, event):
+        for item in range(len(list_checkboxID)):
+            wxFindWindowById(list_txtctrlID[item]).Value = ""
+            wxFindWindowById(list_checkboxID[item]).Label = "<add .db file>"
+            wxFindWindowById(list_checkboxID[item]).Value = False
+            wxFindWindowById(list_checkboxID[item]).Disable()
