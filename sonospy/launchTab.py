@@ -7,8 +7,6 @@
 # - Connect Show Duplicates
 # - Add refresh button (deprecated due to new 8 tc max)
 # - Windowsify the command line commands.
-# - Read in from config file.
-# - Add Save Defaults button.
 ###############################################################################
 
 import wx
@@ -68,295 +66,291 @@ class LaunchPanel(wx.Panel):
     # --------------------------------------------------------------------------
     # [2-9] Checkbox, database name and proxy name field, plus browse button
     #   [2]
-        ck_DB1 = wx.CheckBox(self, -1, "<add .db file>")
-        ck_DB1.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
+        self.ck_DB1 = wx.CheckBox(self, -1, "<add .db file>")
+        self.ck_DB1.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
         
-        tc_DB1 = wx.TextCtrl(panel)
-        tc_DB1.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
+        self.tc_DB1 = wx.TextCtrl(panel)
+        self.tc_DB1.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
 
-        bt_DB1 = wx.Button(self, label="Browse")
-        bt_DB1.tc = tc_DB1
-        bt_DB1.ck = ck_DB1
+        self.bt_DB1 = wx.Button(self, label="Browse")
+        self.bt_DB1.tc = self.tc_DB1
+        self.bt_DB1.ck = self.ck_DB1
 
-        sizer.Add(ck_DB1, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(tc_DB1, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(bt_DB1, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
+        sizer.Add(self.ck_DB1, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.tc_DB1, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.bt_DB1, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
 
-        ck_DB1.Bind(wx.EVT_CHECKBOX, self.OnCheck, ck_DB1)
-        bt_DB1.Bind(wx.EVT_BUTTON, self.browseDB, bt_DB1)
+        self.ck_DB1.Bind(wx.EVT_CHECKBOX, self.OnCheck, self.ck_DB1)
+        self.bt_DB1.Bind(wx.EVT_BUTTON, self.browseDB, self.bt_DB1)
 
         # Read in config
-        ck_DB1.Value = guiFunctions.configMe("launch", "db1_check", bool=True)
-        ck_DB1.Label =  guiFunctions.configMe("launch", "db1_dbname")
-        tc_DB1.Value = guiFunctions.configMe("launch", "db1_proxyname")
+        self.ck_DB1.Value = guiFunctions.configMe("launch", "db1_check", bool=True)
+        self.ck_DB1.Label =  guiFunctions.configMe("launch", "db1_dbname")
+        self.tc_DB1.Value = guiFunctions.configMe("launch", "db1_proxyname")
 
-        if ck_DB1.Label == "":
-            ck_DB1.Label = "<add .db file>"
+        if self.ck_DB1.Label == "":
+            self.ck_DB1.Label = "<add .db file>"
 
-        if ck_DB1.Label == "<add .db file>":
-            ck_DB1.Disable()
+        if self.ck_DB1.Label == "<add .db file>":
+            self.ck_DB1.Disable()
 
         # Add items to lists
-        list_checkboxID.append(ck_DB1.GetId())
-        list_checkboxLabel.append(ck_DB1.GetLabel())
-        list_txtctrlID.append(tc_DB1.GetId())
-        list_txtctrlLabel.append(tc_DB1.Value)
+        list_checkboxID.append(self.ck_DB1.GetId())
+        list_checkboxLabel.append(self.ck_DB1.GetLabel())
+        list_txtctrlID.append(self.tc_DB1.GetId())
+        list_txtctrlLabel.append(self.tc_DB1.Value)
 
         xIndex +=1
 
     #   [3]
-        ck_DB2 = wx.CheckBox(self, -1, "<add .db file>")
-        ck_DB2.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
-        ck_DB2.Disable()
+        self.ck_DB2 = wx.CheckBox(self, -1, "<add .db file>")
+        self.ck_DB2.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
 
-        tc_DB2 = wx.TextCtrl(panel)
-        tc_DB2.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
-        bt_DB2 = wx.Button(self, label="Browse")
-        bt_DB2.tc = tc_DB2
-        bt_DB2.ck = ck_DB2
+        self.tc_DB2 = wx.TextCtrl(panel)
+        self.tc_DB2.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
+        self.bt_DB2 = wx.Button(self, label="Browse")
+        self.bt_DB2.tc = self.tc_DB2
+        self.bt_DB2.ck = self.ck_DB2
 
-        sizer.Add(ck_DB2, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(tc_DB2, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(bt_DB2, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
+        sizer.Add(self.ck_DB2, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.tc_DB2, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.bt_DB2, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
 
-        ck_DB2.Bind(wx.EVT_CHECKBOX, self.OnCheck, ck_DB2)
-        bt_DB2.Bind(wx.EVT_BUTTON, self.browseDB, bt_DB2)
+        self.ck_DB2.Bind(wx.EVT_CHECKBOX, self.OnCheck, self.ck_DB2)
+        self.bt_DB2.Bind(wx.EVT_BUTTON, self.browseDB, self.bt_DB2)
 
         # Read in config
-        ck_DB2.Value = guiFunctions.configMe("launch", "db2_check", bool=True)
-        ck_DB2.Label =  guiFunctions.configMe("launch", "db2_dbname")
-        tc_DB2.Value = guiFunctions.configMe("launch", "db2_proxyname")
+        self.ck_DB2.Value = guiFunctions.configMe("launch", "db2_check", bool=True)
+        self.ck_DB2.Label =  guiFunctions.configMe("launch", "db2_dbname")
+        self.tc_DB2.Value = guiFunctions.configMe("launch", "db2_proxyname")
 
-        if ck_DB2.Label == "":
-            ck_DB2.Label = "<add .db file>"
+        if self.ck_DB2.Label == "":
+            self.ck_DB2.Label = "<add .db file>"
 
-        if ck_DB2.Label == "<add .db file>":
-            ck_DB2.Disable()
+        if self.ck_DB2.Label == "<add .db file>":
+            self.ck_DB2.Disable()
 
         # Add items to lists
-        list_checkboxID.append(ck_DB2.GetId())
-        list_checkboxLabel.append(ck_DB2.GetLabel())
-        list_txtctrlID.append(tc_DB2.GetId())
-        list_txtctrlLabel.append(tc_DB2.Value)
+        list_checkboxID.append(self.ck_DB2.GetId())
+        list_checkboxLabel.append(self.ck_DB2.GetLabel())
+        list_txtctrlID.append(self.tc_DB2.GetId())
+        list_txtctrlLabel.append(self.tc_DB2.Value)
 
         xIndex +=1
 
     #   [4]
-        ck_DB3 = wx.CheckBox(self, -1, "<add .db file>")
-        ck_DB3.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
-        ck_DB3.Disable()
-        tc_DB3 = wx.TextCtrl(panel)
-        tc_DB3.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
-        bt_DB3 = wx.Button(self, label="Browse")
-        bt_DB3.tc = tc_DB3
-        bt_DB3.ck = ck_DB3
+        self.ck_DB3 = wx.CheckBox(self, -1, "<add .db file>")
+        self.ck_DB3.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
 
-        sizer.Add(ck_DB3, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(tc_DB3, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(bt_DB3, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
+        self.tc_DB3 = wx.TextCtrl(panel)
+        self.tc_DB3.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
+        self.bt_DB3 = wx.Button(self, label="Browse")
+        self.bt_DB3.tc = self.tc_DB3
+        self.bt_DB3.ck = self.ck_DB3
 
-        ck_DB3.Bind(wx.EVT_CHECKBOX, self.OnCheck, ck_DB3)
-        bt_DB3.Bind(wx.EVT_BUTTON, self.browseDB, bt_DB3)
+        sizer.Add(self.ck_DB3, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.tc_DB3, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.bt_DB3, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
+
+        self.ck_DB3.Bind(wx.EVT_CHECKBOX, self.OnCheck, self.ck_DB3)
+        self.bt_DB3.Bind(wx.EVT_BUTTON, self.browseDB, self.bt_DB3)
 
         # Read in config
-        ck_DB3.Value = guiFunctions.configMe("launch", "db3_check", bool=True)
-        ck_DB3.Label =  guiFunctions.configMe("launch", "db3_dbname")
-        tc_DB3.Value = guiFunctions.configMe("launch", "db3_proxyname")
+        self.ck_DB3.Value = guiFunctions.configMe("launch", "db3_check", bool=True)
+        self.ck_DB3.Label =  guiFunctions.configMe("launch", "db3_dbname")
+        self.tc_DB3.Value = guiFunctions.configMe("launch", "db3_proxyname")
 
-        if ck_DB3.Label == "":
-            ck_DB3.Label = "<add .db file>"
+        if self.ck_DB3.Label == "":
+            self.ck_DB3.Label = "<add .db file>"
 
-        if ck_DB3.Label == "<add .db file>":
-            ck_DB3.Disable()
+        if self.ck_DB3.Label == "<add .db file>":
+            self.ck_DB3.Disable()
 
         # Add items to lists
-        list_checkboxID.append(ck_DB3.GetId())
-        list_checkboxLabel.append(ck_DB3.GetLabel())
-        list_txtctrlID.append(tc_DB3.GetId())
-        list_txtctrlLabel.append(tc_DB3.Value)
+        list_checkboxID.append(self.ck_DB3.GetId())
+        list_checkboxLabel.append(self.ck_DB3.GetLabel())
+        list_txtctrlID.append(self.tc_DB3.GetId())
+        list_txtctrlLabel.append(self.tc_DB3.Value)
 
         xIndex +=1
 
     #   [5]
-        ck_DB4 = wx.CheckBox(self, -1, "<add .db file>")
-        ck_DB4.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
-        ck_DB4.Disable()
-        tc_DB4 = wx.TextCtrl(panel)
-        tc_DB4.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
-        bt_DB4 = wx.Button(self, label="Browse")
-        bt_DB4.tc = tc_DB4
-        bt_DB4.ck = ck_DB4
+        self.ck_DB4 = wx.CheckBox(self, -1, "<add .db file>")
+        self.ck_DB4.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
 
-        sizer.Add(ck_DB4, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(tc_DB4, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(bt_DB4, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
+        self.tc_DB4 = wx.TextCtrl(panel)
+        self.tc_DB4.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
+        self.bt_DB4 = wx.Button(self, label="Browse")
+        self.bt_DB4.tc = self.tc_DB4
+        self.bt_DB4.ck = self.ck_DB4
 
-        ck_DB4.Bind(wx.EVT_CHECKBOX, self.OnCheck, ck_DB4)
-        bt_DB4.Bind(wx.EVT_BUTTON, self.browseDB, bt_DB4)
+        sizer.Add(self.ck_DB4, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.tc_DB4, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.bt_DB4, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
+
+        self.ck_DB4.Bind(wx.EVT_CHECKBOX, self.OnCheck, self.ck_DB4)
+        self.bt_DB4.Bind(wx.EVT_BUTTON, self.browseDB, self.bt_DB4)
 
         # Read in config
-        ck_DB4.Value = guiFunctions.configMe("launch", "db4_check", bool=True)
-        ck_DB4.Label =  guiFunctions.configMe("launch", "db4_dbname")
-        tc_DB4.Value = guiFunctions.configMe("launch", "db4_proxyname")
+        self.ck_DB4.Value = guiFunctions.configMe("launch", "db4_check", bool=True)
+        self.ck_DB4.Label =  guiFunctions.configMe("launch", "db4_dbname")
+        self.tc_DB4.Value = guiFunctions.configMe("launch", "db4_proxyname")
 
-        if ck_DB4.Label == "":
-            ck_DB4.Label = "<add .db file>"
+        if self.ck_DB4.Label == "":
+            self.ck_DB4.Label = "<add .db file>"
 
-        if ck_DB4.Label == "<add .db file>":
-            ck_DB4.Disable()
+        if self.ck_DB4.Label == "<add .db file>":
+            self.ck_DB4.Disable()
 
         # Add items to lists
-        list_checkboxID.append(ck_DB4.GetId())
-        list_checkboxLabel.append(ck_DB4.GetLabel())
-        list_txtctrlID.append(tc_DB4.GetId())
-        list_txtctrlLabel.append(tc_DB4.Value)
+        list_checkboxID.append(self.ck_DB4.GetId())
+        list_checkboxLabel.append(self.ck_DB4.GetLabel())
+        list_txtctrlID.append(self.tc_DB4.GetId())
+        list_txtctrlLabel.append(self.tc_DB4.Value)
 
         xIndex +=1
 
     #   [6]
-        ck_DB5 = wx.CheckBox(self, -1, "<add .db file>")
-        ck_DB5.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
-        ck_DB5.Disable()
-        tc_DB5 = wx.TextCtrl(panel)
-        tc_DB5.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
-        bt_DB5 = wx.Button(self, label="Browse")
-        bt_DB5.tc = tc_DB5
-        bt_DB5.ck = ck_DB5
+        self.ck_DB5 = wx.CheckBox(self, -1, "<add .db file>")
+        self.ck_DB5.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
 
-        sizer.Add(ck_DB5, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(tc_DB5, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(bt_DB5, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
+        self.tc_DB5 = wx.TextCtrl(panel)
+        self.tc_DB5.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
+        self.bt_DB5 = wx.Button(self, label="Browse")
+        self.bt_DB5.tc = self.tc_DB5
+        self.bt_DB5.ck = self.ck_DB5
 
-        ck_DB5.Bind(wx.EVT_CHECKBOX, self.OnCheck, ck_DB5)
-        bt_DB5.Bind(wx.EVT_BUTTON, self.browseDB, bt_DB5)
+        sizer.Add(self.ck_DB5, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.tc_DB5, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.bt_DB5, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
+
+        self.ck_DB5.Bind(wx.EVT_CHECKBOX, self.OnCheck, self.ck_DB5)
+        self.bt_DB5.Bind(wx.EVT_BUTTON, self.browseDB, self.bt_DB5)
 
         # Read in config
-        ck_DB5.Value = guiFunctions.configMe("launch", "db5_check", bool=True)
-        ck_DB5.Label =  guiFunctions.configMe("launch", "db5_dbname")
-        tc_DB5.Value = guiFunctions.configMe("launch", "db5_proxyname")
+        self.ck_DB5.Value = guiFunctions.configMe("launch", "db5_check", bool=True)
+        self.ck_DB5.Label =  guiFunctions.configMe("launch", "db5_dbname")
+        self.tc_DB5.Value = guiFunctions.configMe("launch", "db5_proxyname")
 
-        if ck_DB5.Label == "":
-            ck_DB5.Label = "<add .db file>"
+        if self.ck_DB5.Label == "":
+            self.ck_DB5.Label = "<add .db file>"
 
-        if ck_DB5.Label == "<add .db file>":
-            ck_DB5.Disable()
+        if self.ck_DB5.Label == "<add .db file>":
+            self.ck_DB5.Disable()
 
         # Add items to lists
-        list_checkboxID.append(ck_DB5.GetId())
-        list_checkboxLabel.append(ck_DB5.GetLabel())
-        list_txtctrlID.append(tc_DB5.GetId())
-        list_txtctrlLabel.append(tc_DB5.Value)
+        list_checkboxID.append(self.ck_DB5.GetId())
+        list_checkboxLabel.append(self.ck_DB5.GetLabel())
+        list_txtctrlID.append(self.tc_DB5.GetId())
+        list_txtctrlLabel.append(self.tc_DB5.Value)
 
         xIndex +=1
 
     #   [7]
-        ck_DB6 = wx.CheckBox(self, -1, "<add .db file>")
-        ck_DB6.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
-        ck_DB6.Disable()
+        self.ck_DB6 = wx.CheckBox(self, -1, "<add .db file>")
+        self.ck_DB6.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
 
-        tc_DB6 = wx.TextCtrl(panel)
-        tc_DB6.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
-        bt_DB6 = wx.Button(self, label="Browse")
-        bt_DB6.tc = tc_DB6
-        bt_DB6.ck = ck_DB6
+        self.tc_DB6 = wx.TextCtrl(panel)
+        self.tc_DB6.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
+        self.bt_DB6 = wx.Button(self, label="Browse")
+        self.bt_DB6.tc = self.tc_DB6
+        self.bt_DB6.ck = self.ck_DB6
 
-        sizer.Add(ck_DB6, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(tc_DB6, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(bt_DB6, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
+        sizer.Add(self.ck_DB6, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.tc_DB6, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.bt_DB6, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
 
-        ck_DB6.Bind(wx.EVT_CHECKBOX, self.OnCheck, ck_DB6)
-        bt_DB6.Bind(wx.EVT_BUTTON, self.browseDB, bt_DB6)
+        self.ck_DB6.Bind(wx.EVT_CHECKBOX, self.OnCheck, self.ck_DB6)
+        self.bt_DB6.Bind(wx.EVT_BUTTON, self.browseDB, self.bt_DB6)
 
         # Read in config
-        ck_DB6.Value = guiFunctions.configMe("launch", "db6_check", bool=True)
-        ck_DB6.Label =  guiFunctions.configMe("launch", "db6_dbname")
-        tc_DB6.Value = guiFunctions.configMe("launch", "db6_proxyname")
+        self.ck_DB6.Value = guiFunctions.configMe("launch", "db6_check", bool=True)
+        self.ck_DB6.Label =  guiFunctions.configMe("launch", "db6_dbname")
+        self.tc_DB6.Value = guiFunctions.configMe("launch", "db6_proxyname")
 
-        if ck_DB6.Label == "":
-            ck_DB6.Label = "<add .db file>"
+        if self.ck_DB6.Label == "":
+            self.ck_DB6.Label = "<add .db file>"
 
-        if ck_DB6.Label == "<add .db file>":
-            ck_DB6.Disable()
+        if self.ck_DB6.Label == "<add .db file>":
+            self.ck_DB6.Disable()
 
         # Add items to lists
-        list_checkboxID.append(ck_DB6.GetId())
-        list_checkboxLabel.append(ck_DB6.GetLabel())
-        list_txtctrlID.append(tc_DB6.GetId())
-        list_txtctrlLabel.append(tc_DB6.Value)
+        list_checkboxID.append(self.ck_DB6.GetId())
+        list_checkboxLabel.append(self.ck_DB6.GetLabel())
+        list_txtctrlID.append(self.tc_DB6.GetId())
+        list_txtctrlLabel.append(self.tc_DB6.Value)
 
         xIndex +=1
 
     #   [8]
-        ck_DB7 = wx.CheckBox(self, -1, "<add .db file>")
-        ck_DB7.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
-        ck_DB7.Disable()
+        self.ck_DB7 = wx.CheckBox(self, -1, "<add .db file>")
+        self.ck_DB7.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
 
-        tc_DB7 = wx.TextCtrl(panel)
-        tc_DB7.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
-        bt_DB7 = wx.Button(self, label="Browse")
-        bt_DB7.tc = tc_DB7
-        bt_DB7.ck = ck_DB7
+        self.tc_DB7 = wx.TextCtrl(panel)
+        self.tc_DB7.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
+        self.bt_DB7 = wx.Button(self, label="Browse")
+        self.bt_DB7.tc = self.tc_DB7
+        self.bt_DB7.ck = self.ck_DB7
 
-        sizer.Add(ck_DB7, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(tc_DB7, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(bt_DB7, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
+        sizer.Add(self.ck_DB7, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.tc_DB7, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.bt_DB7, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
 
-        ck_DB7.Bind(wx.EVT_CHECKBOX, self.OnCheck, ck_DB7)
-        bt_DB7.Bind(wx.EVT_BUTTON, self.browseDB, bt_DB7)
+        self.ck_DB7.Bind(wx.EVT_CHECKBOX, self.OnCheck, self.ck_DB7)
+        self.bt_DB7.Bind(wx.EVT_BUTTON, self.browseDB, self.bt_DB7)
 
         # Read in config
-        ck_DB7.Value = guiFunctions.configMe("launch", "db7_check", bool=True)
-        ck_DB7.Label =  guiFunctions.configMe("launch", "db7_dbname")
-        tc_DB7.Value = guiFunctions.configMe("launch", "db7_proxyname")
+        self.ck_DB7.Value = guiFunctions.configMe("launch", "db7_check", bool=True)
+        self.ck_DB7.Label =  guiFunctions.configMe("launch", "db7_dbname")
+        self.tc_DB7.Value = guiFunctions.configMe("launch", "db7_proxyname")
 
-        if ck_DB7.Label == "":
-            ck_DB7.Label = "<add .db file>"
+        if self.ck_DB7.Label == "":
+            self.ck_DB7.Label = "<add .db file>"
 
-        if ck_DB7.Label == "<add .db file>":
-            ck_DB7.Disable()
+        if self.ck_DB7.Label == "<add .db file>":
+            self.ck_DB7.Disable()
 
         # Add items to lists
-        list_checkboxID.append(ck_DB7.GetId())
-        list_checkboxLabel.append(ck_DB7.GetLabel())
-        list_txtctrlID.append(tc_DB7.GetId())
-        list_txtctrlLabel.append(tc_DB7.Value)
+        list_checkboxID.append(self.ck_DB7.GetId())
+        list_checkboxLabel.append(self.ck_DB7.GetLabel())
+        list_txtctrlID.append(self.tc_DB7.GetId())
+        list_txtctrlLabel.append(self.tc_DB7.Value)
 
         xIndex +=1
 
     #   [9]
-        ck_DB8 = wx.CheckBox(self, -1, "<add .db file>")
-        ck_DB8.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
-        ck_DB8.Disable()
+        self.ck_DB8 = wx.CheckBox(self, -1, "<add .db file>")
+        self.ck_DB8.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
 
-        tc_DB8 = wx.TextCtrl(panel)
-        tc_DB8.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
-        bt_DB8 = wx.Button(self, label="Browse")
-        bt_DB8.tc = tc_DB8
-        bt_DB8.ck = ck_DB8
+        self.tc_DB8 = wx.TextCtrl(panel)
+        self.tc_DB8.SetToolTip(wx.ToolTip("Enter a name for display on your Sonos Controller."))
+        self.bt_DB8 = wx.Button(self, label="Browse")
+        self.bt_DB8.tc = self.tc_DB8
+        self.bt_DB8.ck = self.ck_DB8
 
-        sizer.Add(ck_DB8, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(tc_DB8, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
-        sizer.Add(bt_DB8, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
+        sizer.Add(self.ck_DB8, pos=(xIndex,0), flag=wx.LEFT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.tc_DB8, pos=(xIndex,1), span=(1,2),flag=wx.EXPAND|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, border=10)
+        sizer.Add(self.bt_DB8, pos=(xIndex, 3), flag=wx.RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, border=10)
 
-        ck_DB8.Bind(wx.EVT_CHECKBOX, self.OnCheck, ck_DB8)
-        bt_DB8.Bind(wx.EVT_BUTTON, self.browseDB, bt_DB8)
+        self.ck_DB8.Bind(wx.EVT_CHECKBOX, self.OnCheck, self.ck_DB8)
+        self.bt_DB8.Bind(wx.EVT_BUTTON, self.browseDB, self.bt_DB8)
 
         # Read in config
-        ck_DB8.Value = guiFunctions.configMe("launch", "db8_check", bool=True)
-        ck_DB8.Label =  guiFunctions.configMe("launch", "db8_dbname")
-        tc_DB8.Value = guiFunctions.configMe("launch", "db8_proxyname")
+        self.ck_DB8.Value = guiFunctions.configMe("launch", "db8_check", bool=True)
+        self.ck_DB8.Label =  guiFunctions.configMe("launch", "db8_dbname")
+        self.tc_DB8.Value = guiFunctions.configMe("launch", "db8_proxyname")
 
-        if ck_DB8.Label == "":
-            ck_DB8.Label = "<add .db file>"
+        if self.ck_DB8.Label == "":
+            self.ck_DB8.Label = "<add .db file>"
 
-        if ck_DB8.Label == "<add .db file>":
-            ck_DB8.Disable()
+        if self.ck_DB8.Label == "<add .db file>":
+            self.ck_DB8.Disable()
 
         # Add items to lists
-        list_checkboxID.append(ck_DB8.GetId())
-        list_checkboxLabel.append(ck_DB8.GetLabel())
-        list_txtctrlID.append(tc_DB8.GetId())
-        list_txtctrlLabel.append(tc_DB8.Value)
+        list_checkboxID.append(self.ck_DB8.GetId())
+        list_checkboxLabel.append(self.ck_DB8.GetLabel())
+        list_txtctrlID.append(self.tc_DB8.GetId())
+        list_txtctrlLabel.append(self.tc_DB8.Value)
 
         xIndex +=1
 
@@ -524,5 +518,29 @@ class LaunchPanel(wx.Panel):
         section = "launch"
 
         guiFunctions.configWrite(section, "proxy", self.rd_Proxy.Value)
+        guiFunctions.configWrite(section, "db1_check", self.ck_DB1.Value)
+        guiFunctions.configWrite(section, "db1_dbname", self.ck_DB1.Label)
+        guiFunctions.configWrite(section, "db1_proxyname", self.tc_DB1.Value)
+        guiFunctions.configWrite(section, "db2_check", self.ck_DB2.Value)
+        guiFunctions.configWrite(section, "db2_dbname", self.ck_DB2.Label)
+        guiFunctions.configWrite(section, "db2_proxyname", self.tc_DB2.Value)
+        guiFunctions.configWrite(section, "db3_check", self.ck_DB3.Value)
+        guiFunctions.configWrite(section, "db3_dbname", self.ck_DB3.Label)
+        guiFunctions.configWrite(section, "db3_proxyname", self.tc_DB3.Value)
+        guiFunctions.configWrite(section, "db4_check", self.ck_DB4.Value)
+        guiFunctions.configWrite(section, "db4_dbname", self.ck_DB4.Label)
+        guiFunctions.configWrite(section, "db4_proxyname", self.tc_DB4.Value)
+        guiFunctions.configWrite(section, "db5_check", self.ck_DB5.Value)
+        guiFunctions.configWrite(section, "db5_dbname", self.ck_DB5.Label)
+        guiFunctions.configWrite(section, "db5_proxyname", self.tc_DB5.Value)
+        guiFunctions.configWrite(section, "db6_check", self.ck_DB6.Value)
+        guiFunctions.configWrite(section, "db6_dbname", self.ck_DB6.Label)
+        guiFunctions.configWrite(section, "db6_proxyname", self.tc_DB6.Value)
+        guiFunctions.configWrite(section, "db7_check", self.ck_DB7.Value)
+        guiFunctions.configWrite(section, "db7_dbname", self.ck_DB7.Label)
+        guiFunctions.configWrite(section, "db7_proxyname", self.tc_DB7.Value)
+        guiFunctions.configWrite(section, "db8_check", self.ck_DB8.Value)
+        guiFunctions.configWrite(section, "db8_dbname", self.ck_DB8.Label)
+        guiFunctions.configWrite(section, "db8_proxyname", self.tc_DB8.Value)
 
         guiFunctions.statusText(self, "Defaults saved...")
