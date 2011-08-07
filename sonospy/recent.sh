@@ -64,8 +64,8 @@ cp $1 $1.backup
 if [ $3 = "albums" ]
     then
     modifier=$(($4 - 1))
-    ./scan -d $1 -x $2 -w "AS t WHERE t.created >= (SELECT a.created FROM $3 AS a Where a.albumartist != 'Various Artists' ORDER BY a.created DESC LIMIT $modifier,1)"
+    ./scan.py -d $1 -x $2 -w "AS t WHERE t.created >= (SELECT a.created FROM $3 AS a Where a.albumartist != 'Various Artists' ORDER BY a.created DESC LIMIT $modifier,1)"
 else
-    ./scan -d $1 -x $2 -w "where (julianday(datetime('now')) - julianday(datetime($3, 'unixepoch'))) <= $4"
+    ./scan.py -d $1 -x $2 -w "where (julianday(datetime('now')) - julianday(datetime($3, 'unixepoch'))) <= $4"
 fi
 
