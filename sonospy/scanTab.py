@@ -42,9 +42,6 @@ import subprocess
 from threading import *
 import guiFunctions
 
-print "OS Name: \t" + os.name
-print "Platform Name:   " + sys.platform
-
 # Define notification event for thread completion
 EVT_RESULT_ID = wx.NewId()
 
@@ -72,13 +69,19 @@ class WorkerThread(Thread):
 
     def run(self):
         """Run Worker Thread."""
-        proc = subprocess.Popen([scanCMD], shell=True,stdout=subprocess.PIPE)
+        if os.name == "nt":
+            proc = subprocess.Popen(scanCMD.replace("\\", "\\\\")).wait()
+            while True:
+                #Figure out how to push to the textctrl
+                wx.Yield()
+        else:
+            proc = subprocess.Popen([scanCMD], shell=True,stdout=subprocess.PIPE)
 
-        while True:
-            line = proc.stdout.readline()
-            wx.PostEvent(self._notify_window, ResultEvent(line))
-            wx.Yield()
-            if not line: break
+            while True:
+                line = proc.stdout.readline()
+                wx.PostEvent(self._notify_window, ResultEvent(line))
+                wx.Yield()
+                if not line: break
         proc.wait()
         wx.PostEvent(self._notify_window, ResultEvent(None))
         return

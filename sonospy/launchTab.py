@@ -508,14 +508,14 @@ class LaunchPanel(wx.Panel):
         else:
             proc = subprocess.Popen([launchCMD])
 
-        if self.bt_Launch.Label == "Stop":
-            self.bt_Launch.Label = "Launch"
-            self.bt_Launch.SetToolTip(wx.ToolTip("Click here to launch the Sonospy service."))
-            guiFunctions.statusText(self, "Sonospy Service Stopped...")
-        else:
-            self.bt_Launch.Label = "Stop"
-            self.bt_Launch.SetToolTip(wx.ToolTip("Click here to stop the Sonospy service."))
-            guiFunctions.statusText(self, "Sonospy Service Started...")
+            if self.bt_Launch.Label == "Stop":
+                self.bt_Launch.Label = "Launch"
+                self.bt_Launch.SetToolTip(wx.ToolTip("Click here to launch the Sonospy service."))
+                guiFunctions.statusText(self, "Sonospy Service Stopped...")
+            else:
+                self.bt_Launch.Label = "Stop"
+                self.bt_Launch.SetToolTip(wx.ToolTip("Click here to stop the Sonospy service."))
+                guiFunctions.statusText(self, "Sonospy Service Started...")
 
         # set back to original working directory
         os.chdir(owd)
