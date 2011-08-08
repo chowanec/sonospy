@@ -28,6 +28,8 @@
 # - Connect Show Duplicates
 # - Windowsify the commands to run properly -- namely pOpen and how
 #   to capture stdout?
+# Windows Command:
+# Launch: python pycpoint.py -p -wSonospy=Henk,virtuals.db
 ###############################################################################
 
 import wx
@@ -474,16 +476,15 @@ class LaunchPanel(wx.Panel):
         # Check for OS
         if os.name == 'nt':
             cmdroot = 'python '
+            launchCMD = cmdroot + "pycpoint.py -p "
         else:
             cmdroot = './'
-
-        launchCMD = cmdroot + "sonospy_"
-
-        # which version are we running?
-        if self.rd_Proxy.Value == True:
-            launchCMD += "proxy "
-        else:
-            launchCMD += "web "
+            launchCMD = cmdroot + "sonospy_"
+            # which version are we running?
+            if self.rd_Proxy.Value == True:
+                launchCMD += "proxy "
+            else:
+                launchCMD += "web "
 
         # rebuild text labels now, user may have changed them
         for item in range(len(list_checkboxID)):
@@ -492,7 +493,8 @@ class LaunchPanel(wx.Panel):
             
         # build out the command
         if self.bt_Launch.Label == "Stop":
-            launchCMD = cmdroot + "sonospy_stop"
+            if os.name != 'nt':
+                launchCMD = cmdroot + "sonospy_stop"
         else:
             for item in range(len(list_checkboxID)):
                 if wx.FindWindowById(list_checkboxID[item]).Value == True:
@@ -501,8 +503,10 @@ class LaunchPanel(wx.Panel):
 # DEBUG ------------------------------------------------------------------------
 #            print launchCMD
 # ------------------------------------------------------------------------------
-
-        proc = subprocess.Popen([launchCMD],shell=True)
+        if os.name != 'nt':
+            proc = subprocess.Popen([launchCMD],shell=True)
+        else:
+            proc = subprocess.Popen([launchCMD])
 
         if self.bt_Launch.Label == "Stop":
             self.bt_Launch.Label = "Launch"

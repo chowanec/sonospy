@@ -24,10 +24,12 @@
 ###############################################################################
 # TODO:
 # - Tons and tons of error checking (check for int on relevant fields)
-# - Use Blue's strategy of scrubbing the SQL database for valid fields:
-#       import sqlite3
-#       sqlite3.connect(sourcedb)
-#       SELECT DISTINCT <field> FROM TAGS
+# - Use Blue's strategy of scrubbing the SQL database for valid fields?:
+#        db = sqlite3.connect(selection)
+#        cur = db.cursor()
+#        cur.execute('SELECT DISTINCT genre FROM tags')
+#        for row in cur:
+#            a.append(row)
 # - Windowsify the commands to run properly -- namely pOpen and how
 #   to capture stdout?
 ###############################################################################
@@ -38,6 +40,7 @@ import os
 import subprocess
 from threading import *
 import guiFunctions
+import sqlite3
 
 EVT_RESULT_ID = wx.NewId()
 

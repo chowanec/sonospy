@@ -24,16 +24,26 @@
 ###############################################################################
 # TODO:
 # - Windowsify the commands to run properly -- namely pOpen and how
-#   to capture stdout?
+#   to capture stdout? Read from a file to see if you can "tail" in a os agnostic
+#   way?
+#
+#   http://stackoverflow.com/questions/136168/get-last-n-lines-of-a-file-with-python-similar-to-tail
+#   
+# Windows commands:
+#   Scan: python scan.py -d virtuals.db D:\\Documents\ and\ Settings\\BMOSS\\My\ Documents\\Sonos\ Project\\Test\ database D:\\Documents\ and\ Settings\\BMOSS\\My\ Documents\\Sonos\ Project\\BMPlaylists \\\\Nas-primos01\\flac\\Afrocubism \\\\Nas-primos01\\flac\\Blind\ Faith
+#   Repair: python scan.py -d virtuals.db -r
 ###############################################################################
 
 import wx
 from wxPython.wx import *
 import os
+import sys
 import subprocess
 from threading import *
 import guiFunctions
 
+print "OS Name: \t" + os.name
+print "Platform Name:   " + sys.platform
 
 # Define notification event for thread completion
 EVT_RESULT_ID = wx.NewId()
@@ -49,7 +59,6 @@ class ResultEvent(wx.PyEvent):
         wx.PyEvent.__init__(self)
         self.SetEventType(EVT_RESULT_ID)
         self.data = data
-
 
 # Worker thread for multi-threading
 class WorkerThread(Thread):
@@ -250,7 +259,6 @@ class ScanPanel(wx.Panel):
                 self.tc_MainDatabase.Value = selection
                 guiFunctions.statusText(self, "Database: " + selection + " selected...")
         dialog.Destroy()
-
 
     def bt_FoldersToScanAddClick(self, event):
         dialog = wx.DirDialog(self, "Add a Directory...", style=wx.DD_DEFAULT_STYLE)
