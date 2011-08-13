@@ -1,0 +1,10 @@
+Database: /home/chow/Applications/sonospy/sonospy/sonos.db
+Extracting tag data
+insert into tags select * from old.tags AS t WHERE t.created >= (SELECT a.created FROM albums AS a WHERE a.albumartist != 'Various Artists' ORDER BY a.created DESC LIMIT 29,1)
+insert into workvirtuals select * from old.workvirtuals where id in (select id from tags)
+Tag data extracted
+Generating change data
+Scannumber: 1
+Change data generated
+Processing tags
+Tags processed

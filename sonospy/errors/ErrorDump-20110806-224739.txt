@@ -1,0 +1,75 @@
+<class 'sqlite3.IntegrityError'>
+Python 2.7.1+: /usr/bin/python
+Sat Aug  6 22:47:39 2011
+
+A problem occurred in a Python script.  Here is the sequence of
+function calls leading up to the error, in the order they occurred.
+
+ /home/chow/Applications/sonospy/sonospy/gettags.py in <module>()
+ 1826 
+ 1827 if __name__ == "__main__":
+ 1828     status = main()
+ 1829     sys.exit(status)
+ 1830 
+status undefined
+main = <function main>
+
+ /home/chow/Applications/sonospy/sonospy/gettags.py in main(argv=None)
+ 1817         elif options.extract and options.where:
+ 1818             newdatabase = check_database_exists(options.extract)
+ 1819             generate_subset(options, database, newdatabase, options.where)
+ 1820         else:
+ 1821             for path in args:
+global generate_subset = <function generate_subset>
+options = <Values at 0xe32ea8: {'verbose': False, 'databas...': False, 'exclude': None, 'extract': 'temp.db'}>
+database = '/home/chow/Applications/sonospy/sonospy/sonos.db'
+newdatabase = '/home/chow/Applications/sonospy/sonospy/temp.db'
+options.where = "where genre='Indie'"
+
+ /home/chow/Applications/sonospy/sonospy/gettags.py in generate_subset(options=<Values at 0xe32ea8: {'verbose': False, 'databas...': False, 'exclude': None, 'extract': 'temp.db'}>, sourcedatabase='/home/chow/Applications/sonospy/sonospy/sonos.db', targetdatabase='/home/chow/Applications/sonospy/sonospy/temp.db', where="where genre='Indie'")
+ 1190         logstring = statement
+ 1191         filelog.write_log(logstring)
+ 1192         c.execute(statement)
+ 1193         # copy related workvirtuals into new database
+ 1194         statement = """insert into workvirtuals select * from old.workvirtuals where id in (select id from tags)"""
+c = <sqlite3.Cursor object>
+c.execute = <built-in method execute of sqlite3.Cursor object>
+statement = "insert into tags select * from old.tags where genre='Indie'"
+<class 'sqlite3.IntegrityError'>: column id is not unique
+    __class__ = <class 'sqlite3.IntegrityError'>
+    __delattr__ = <method-wrapper '__delattr__' of IntegrityError object>
+    __dict__ = {}
+    __doc__ = None
+    __format__ = <built-in method __format__ of IntegrityError object>
+    __getattribute__ = <method-wrapper '__getattribute__' of IntegrityError object>
+    __getitem__ = <method-wrapper '__getitem__' of IntegrityError object>
+    __getslice__ = <method-wrapper '__getslice__' of IntegrityError object>
+    __hash__ = <method-wrapper '__hash__' of IntegrityError object>
+    __init__ = <method-wrapper '__init__' of IntegrityError object>
+    __module__ = 'sqlite3'
+    __new__ = <built-in method __new__ of type object>
+    __reduce__ = <built-in method __reduce__ of IntegrityError object>
+    __reduce_ex__ = <built-in method __reduce_ex__ of IntegrityError object>
+    __repr__ = <method-wrapper '__repr__' of IntegrityError object>
+    __setattr__ = <method-wrapper '__setattr__' of IntegrityError object>
+    __setstate__ = <built-in method __setstate__ of IntegrityError object>
+    __sizeof__ = <built-in method __sizeof__ of IntegrityError object>
+    __str__ = <method-wrapper '__str__' of IntegrityError object>
+    __subclasshook__ = <built-in method __subclasshook__ of type object>
+    __unicode__ = <built-in method __unicode__ of IntegrityError object>
+    __weakref__ = None
+    args = ('column id is not unique',)
+    message = 'column id is not unique'
+
+The above is a description of an error in a Python program.  Here is
+the original traceback:
+
+Traceback (most recent call last):
+  File "./gettags.py", line 1828, in <module>
+    status = main()
+  File "./gettags.py", line 1819, in main
+    generate_subset(options, database, newdatabase, options.where)
+  File "./gettags.py", line 1192, in generate_subset
+    c.execute(statement)
+IntegrityError: column id is not unique
+

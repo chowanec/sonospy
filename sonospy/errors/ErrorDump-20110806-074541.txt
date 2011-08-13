@@ -1,0 +1,147 @@
+<type 'exceptions.AssertionError'>
+Python 2.7.1+: /usr/bin/python
+Sat Aug  6 07:45:41 2011
+
+A problem occurred in a Python script.  Here is the sequence of
+function calls leading up to the error, in the order they occurred.
+
+ /usr/lib/python2.7/runpy.py in _run_module_as_main(mod_name='unittest.__main__', alter_argv=1)
+  160         sys.argv[0] = fname
+  161     return _run_code(code, main_globals, None,
+  162                      "__main__", fname, loader, pkg_name)
+  163 
+  164 def run_module(mod_name, init_globals=None,
+fname = '/usr/lib/python2.7/unittest/__main__.py'
+loader = <pkgutil.ImpLoader instance>
+pkg_name = 'unittest'
+
+ /usr/lib/python2.7/runpy.py in _run_code(code=<code object <module> at 0x28c6eb0, file "/usr/lib/python2.7/unittest/__main__.py", line 1>, run_globals={'TestProgram': <class 'unittest.main.TestProgram'>, 'USAGE_AS_MAIN': 'Usage: %(progName)s [options] [tests]\n\nOptions:\n...ble from the top\nlevel directory of the project.\n', '__builtins__': <module '__builtin__' (built-in)>, '__doc__': 'Main entry point', '__file__': '/usr/lib/python2.7/unittest/__main__.py', '__loader__': <pkgutil.ImpLoader instance>, '__name__': '__main__', '__package__': 'unittest', '__unittest': True, 'main': <class 'unittest.main.TestProgram'>, ...}, init_globals=None, mod_name='__main__', mod_fname='/usr/lib/python2.7/unittest/__main__.py', mod_loader=<pkgutil.ImpLoader instance>, pkg_name='unittest')
+   70                        __loader__ = mod_loader,
+   71                        __package__ = pkg_name)
+   72     exec code in run_globals
+   73     return run_globals
+   74 
+code = <code object <module> at 0x28c6eb0, file "/usr/lib/python2.7/unittest/__main__.py", line 1>
+run_globals = {'TestProgram': <class 'unittest.main.TestProgram'>, 'USAGE_AS_MAIN': 'Usage: %(progName)s [options] [tests]\n\nOptions:\n...ble from the top\nlevel directory of the project.\n', '__builtins__': <module '__builtin__' (built-in)>, '__doc__': 'Main entry point', '__file__': '/usr/lib/python2.7/unittest/__main__.py', '__loader__': <pkgutil.ImpLoader instance>, '__name__': '__main__', '__package__': 'unittest', '__unittest': True, 'main': <class 'unittest.main.TestProgram'>, ...}
+
+ /usr/lib/python2.7/unittest/__main__.py in <module>()
+    8 
+    9 from .main import main, TestProgram, USAGE_AS_MAIN
+   10 TestProgram.USAGE = USAGE_AS_MAIN
+   11 
+   12 main(module=None)
+main = <class 'unittest.main.TestProgram'>
+module undefined
+builtinNone = None
+
+ /usr/lib/python2.7/unittest/main.py in __init__(self=<unittest.main.TestProgram object>, module=None, defaultTest=None, argv=['python -m unittest', 'utest_scan'], testRunner=None, testLoader=<unittest.loader.TestLoader object>, exit=True, verbosity=1, failfast=None, catchbreak=None, buffer=None)
+   92         self.testLoader = testLoader
+   93         self.progName = os.path.basename(argv[0])
+   94         self.parseArgs(argv)
+   95         self.runTests()
+   96 
+self = <unittest.main.TestProgram object>
+self.parseArgs = <bound method TestProgram.parseArgs of <unittest.main.TestProgram object>>
+argv = ['python -m unittest', 'utest_scan']
+
+ /usr/lib/python2.7/unittest/main.py in parseArgs(self=<unittest.main.TestProgram object>, argv=['python -m unittest', 'utest_scan'])
+  147             else:
+  148                 self.testNames = (self.defaultTest,)
+  149             self.createTests()
+  150         except getopt.error, msg:
+  151             self.usageExit(msg)
+self = <unittest.main.TestProgram object>
+self.createTests = <bound method TestProgram.createTests of <unittest.main.TestProgram object>>
+
+ /usr/lib/python2.7/unittest/main.py in createTests(self=<unittest.main.TestProgram object>)
+  156         else:
+  157             self.test = self.testLoader.loadTestsFromNames(self.testNames,
+  158                                                            self.module)
+  159 
+  160     def _do_discovery(self, argv, Loader=loader.TestLoader):
+self = <unittest.main.TestProgram object>
+self.module = None
+
+ /usr/lib/python2.7/unittest/loader.py in loadTestsFromNames(self=<unittest.loader.TestLoader object>, names=['utest_scan'], module=None)
+  126         of string specifiers. See 'loadTestsFromName()'.
+  127         """
+  128         suites = [self.loadTestsFromName(name, module) for name in names]
+  129         return self.suiteClass(suites)
+  130 
+suites undefined
+self = <unittest.loader.TestLoader object>
+self.loadTestsFromName = <bound method TestLoader.loadTestsFromName of <unittest.loader.TestLoader object>>
+name = 'utest_scan'
+module = None
+names = ['utest_scan']
+
+ /usr/lib/python2.7/unittest/loader.py in loadTestsFromName(self=<unittest.loader.TestLoader object>, name='utest_scan', module=None)
+   89             while parts_copy:
+   90                 try:
+   91                     module = __import__('.'.join(parts_copy))
+   92                     break
+   93                 except ImportError:
+module = None
+builtin__import__ = <built-in function __import__>
+'.'.join undefined
+parts_copy = ['utest_scan']
+
+ /home/chow/Applications/sonospy/sonospy/utest_scan.py in <module>()
+   77 g_test_root_directory_path = os.path.join(os.getcwd(), g_test_root_directory_name)  #(1) ... see diagram above
+   78 _initial_scan_tracks_path = os.path.join(g_test_root_directory_path, _music_tracks_root_container_name)   #(2)
+   79 assert os.path.exists(g_test_root_directory_path),'Cannot locate unit test file directory ({0}'.format(g_test_root_directory_name)
+   80 assert os.path.exists(_initial_scan_tracks_path),'Cannot locate unit test music track directory ({0}'.format(_initial_scan_tracks_path)
+   81 _music_track_path = os.path.join(_initial_scan_tracks_path, 'tracks for main tests')    #(4)
+os = None
+os.path undefined
+g_test_root_directory_path = None
+'Cannot locate unit test file directory ({0}'.format undefined
+g_test_root_directory_name = None
+<type 'exceptions.AssertionError'>: Cannot locate unit test file directory (unit\ test\ files
+    __class__ = <type 'exceptions.AssertionError'>
+    __delattr__ = <method-wrapper '__delattr__' of exceptions.AssertionError object>
+    __dict__ = {}
+    __doc__ = 'Assertion failed.'
+    __format__ = <built-in method __format__ of exceptions.AssertionError object>
+    __getattribute__ = <method-wrapper '__getattribute__' of exceptions.AssertionError object>
+    __getitem__ = <method-wrapper '__getitem__' of exceptions.AssertionError object>
+    __getslice__ = <method-wrapper '__getslice__' of exceptions.AssertionError object>
+    __hash__ = <method-wrapper '__hash__' of exceptions.AssertionError object>
+    __init__ = <method-wrapper '__init__' of exceptions.AssertionError object>
+    __new__ = <built-in method __new__ of type object>
+    __reduce__ = <built-in method __reduce__ of exceptions.AssertionError object>
+    __reduce_ex__ = <built-in method __reduce_ex__ of exceptions.AssertionError object>
+    __repr__ = <method-wrapper '__repr__' of exceptions.AssertionError object>
+    __setattr__ = <method-wrapper '__setattr__' of exceptions.AssertionError object>
+    __setstate__ = <built-in method __setstate__ of exceptions.AssertionError object>
+    __sizeof__ = <built-in method __sizeof__ of exceptions.AssertionError object>
+    __str__ = <method-wrapper '__str__' of exceptions.AssertionError object>
+    __subclasshook__ = <built-in method __subclasshook__ of type object>
+    __unicode__ = <built-in method __unicode__ of exceptions.AssertionError object>
+    args = (r'Cannot locate unit test file directory (unit\ test\ files',)
+    message = r'Cannot locate unit test file directory (unit\ test\ files'
+
+The above is a description of an error in a Python program.  Here is
+the original traceback:
+
+Traceback (most recent call last):
+  File "/usr/lib/python2.7/runpy.py", line 162, in _run_module_as_main
+    "__main__", fname, loader, pkg_name)
+  File "/usr/lib/python2.7/runpy.py", line 72, in _run_code
+    exec code in run_globals
+  File "/usr/lib/python2.7/unittest/__main__.py", line 12, in <module>
+    main(module=None)
+  File "/usr/lib/python2.7/unittest/main.py", line 94, in __init__
+    self.parseArgs(argv)
+  File "/usr/lib/python2.7/unittest/main.py", line 149, in parseArgs
+    self.createTests()
+  File "/usr/lib/python2.7/unittest/main.py", line 158, in createTests
+    self.module)
+  File "/usr/lib/python2.7/unittest/loader.py", line 128, in loadTestsFromNames
+    suites = [self.loadTestsFromName(name, module) for name in names]
+  File "/usr/lib/python2.7/unittest/loader.py", line 91, in loadTestsFromName
+    module = __import__('.'.join(parts_copy))
+  File "utest_scan.py", line 79, in <module>
+    assert os.path.exists(g_test_root_directory_path),'Cannot locate unit test file directory ({0}'.format(g_test_root_directory_name)
+AssertionError: Cannot locate unit test file directory (unit\ test\ files
+
