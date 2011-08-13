@@ -1,2 +1,4 @@
 *.pyc
 *~
+sonospy/*.db
+unit_test_files/*

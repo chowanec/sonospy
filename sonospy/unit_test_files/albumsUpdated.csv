@@ -1,3 +1,0 @@
-'id'	'parentID'	'album'	'artist'	'year'	'albumartist'	'duplicate'	'cover'	'artid'	'inserted'	'composer'	'tracknumbers'	'created'	'lastmodified'	'albumtype'	'lastplayed'	'playcount'	'upnpclass'
-300000001	'300000000'	'Add Album 1'	'Add Artist 1'	734138	'Add Artist 1'	0	''	0	1312640217.328	''	'1,1,2,4,4'	1312640227.690	1311942049.270	10	0.000	0	'object.container.album.musicAlbum'
-300000002	'300000000'	'Add Album 2'	'Add Artist 2'	734138	'Add Artist 1'	0	'd:\Documents and Settings\BMOSS\My Documents\Sonos Project\sonospy\sonospy\unit_test_files\music_tracks\tracks_for_update_scan_art_test\folder.jpg'	3	1312640217.359	''	'2,4'	1312437884.450	1312117379.250	10	0.000	0	'object.container.album.musicAlbum'
