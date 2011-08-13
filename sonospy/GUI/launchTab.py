@@ -553,10 +553,11 @@ class LaunchPanel(wx.Panel):
         guiFunctions.statusText(self, "Defaults saved...")
 
     def bt_AutoPopulateClick(self, event):
-#   If you want to autogenerate DB list and increment sizer Index, uncomment
-#   the below
+        # Set Original Working Directory so we can get back to here.
+        owd = os.getcwd()
+        os.chdir(os.pardir)
 
-#   Get a count of *.db from the filesystem
+        #   Get a count of *.db from the filesystem
         numDB = guiFunctions.scrubDB(os.getcwd())
         curCount = 1
         # Checkbox (enable, disable for launch)
@@ -608,6 +609,9 @@ class LaunchPanel(wx.Panel):
 #            # Bind to event for later (DEBUG)
 #                check.Bind(wx.EVT_CHECKBOX, self.OnCheck, check)
 
+        # set back to original working directory
+        os.chdir(owd)
+    
     def bt_ClearClick(self, event):
         for item in range(len(list_checkboxID)):
             wxFindWindowById(list_txtctrlID[item]).Value = ""
