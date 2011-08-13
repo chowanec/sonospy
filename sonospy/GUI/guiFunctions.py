@@ -84,14 +84,16 @@ def configWrite(heading, term, value):
 #-------------------------------------------------------------------------------
 import os
 
-def scrubDB(path):
+def scrubDB(path, ext=False):
     asps = []
-    # replace "(path)" with os.path.abspath(os.path.join(path, os.path.pardir, os.path.pardir))
-    # when this goes in gui/linux
+    filters = ext
+    
     for root, dirs, files in os.walk(path):
         for file in files:
-            if file.endswith('.db'):
-                    asps.append(file)
+            basename, extension = os.path.splitext(file)
+            extension = "*" + extension
+            if extension in filters:
+                asps.append(file)
     return asps
 
 #-------------------------------------------------------------------------------

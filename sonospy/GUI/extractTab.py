@@ -404,9 +404,14 @@ class ExtractPanel(wx.Panel):
         self.worker = None
 
     def bt_MainDatabaseClick(self, event):
-        # Create a list of filters
-        filters = 'Sonospy files (*.db)|*.db|All files (*.*)|*.*'
-        dialog = wx.FileDialog ( None, message = 'Select Database File...', wildcard = filters, style = wxOPEN)
+        filters = guiFunctions.configMe("general", "database_extensions")
+        wildcards = "Sonospy Database (" + filters + ")|" + filters.replace(" ", ";") + "|All files (*.*)|*.*"
+
+        # back up to the folder below our current one.  save cwd in variable
+        owd = os.getcwd()
+        os.chdir(os.pardir)
+
+        dialog = wx.FileDialog ( None, message = 'Select Source Database File...', wildcard = wildcards, style = wxOPEN)
 
         # Open Dialog Box and get Selection
         if dialog.ShowModal() == wxID_OK:
@@ -416,11 +421,18 @@ class ExtractPanel(wx.Panel):
         dialog.Destroy()
         guiFunctions.statusText(self, "Main Database: " + selection + " selected...")
 
+        # set back to original working directory
+        os.chdir(owd)
+
     def bt_TargetDatabaseClick(self, event):
-        # Create a list of filters
-        filters = 'Sonospy files (*.db)|*.db|All files (*.*)|*.*'
-        dialog = wx.FileDialog ( None, message = 'Select Database File...',
-            wildcard = filters, style = wxOPEN )
+        filters = guiFunctions.configMe("general", "database_extensions")
+        wildcards = "Sonospy Database (" + filters + ")|" + filters.replace(" ", ";") + "|All files (*.*)|*.*"
+        
+        # back up to the folder below our current one.  save cwd in variable
+        owd = os.getcwd()
+        os.chdir(os.pardir)
+        
+        dialog = wx.FileDialog ( None, message = 'Select Target Database File...', wildcard = wildcards, style = wxOPEN )
 
         # Open Dialog Box and get Selection
         if dialog.ShowModal() == wxID_OK:
@@ -429,6 +441,9 @@ class ExtractPanel(wx.Panel):
                 self.tc_TargetDatabase.Value = selection
         dialog.Destroy()
         guiFunctions.statusText(self, "Target Database: " + selection + " selected...")
+
+        # set back to original working directory
+        os.chdir(owd)
 
     def setButtons(self, state):
         """

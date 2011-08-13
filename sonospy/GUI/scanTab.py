@@ -260,8 +260,14 @@ class ScanPanel(wx.Panel):
         os.chdir(owd)
 
     def bt_MainDatabaseClick(self, event):
-        filters = 'Sonospy files (*.db)|*.db|All files (*.*)|*.*'
-        dialog = wx.FileDialog ( None, message = 'Select Database File...', wildcard = filters, style = wxOPEN)
+        filters = guiFunctions.configMe("general", "database_extensions")
+        wildcards = "Sonospy Database (" + filters + ")|" + filters.replace(" ", ";") + "|All files (*.*)|*.*"
+        
+        # back up to the folder below our current one.  save cwd in variable
+        owd = os.getcwd()
+        os.chdir(os.pardir)
+        
+        dialog = wx.FileDialog ( None, message = 'Select Database File...', wildcard = wildcards, style = wxOPEN)
 
         # Open Dialog Box and get Selection
         if dialog.ShowModal() == wxID_OK:
@@ -270,6 +276,9 @@ class ScanPanel(wx.Panel):
                 self.tc_MainDatabase.Value = selection
                 guiFunctions.statusText(self, "Database: " + selection + " selected...")
         dialog.Destroy()
+
+        # set back to original working directory
+        os.chdir(owd)
 
     def bt_FoldersToScanAddClick(self, event):
         dialog = wx.DirDialog(self, "Add a Directory...", style=wx.DD_DEFAULT_STYLE)

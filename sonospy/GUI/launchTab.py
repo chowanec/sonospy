@@ -25,11 +25,13 @@
 # sonospy_web Author: Mark Henkelis <mark.henkelis@tesco.net>
 ###############################################################################
 # TODO:
-# - Connect Show Duplicates
+# - Connect Show Duplicates (i.e. read in from Mark's INI and then override
+#   without overwriting.
 # - Windowsify the commands to run properly -- namely pOpen and how
 #   to capture stdout?
+#
 # Windows Command:
-# Launch: python pycpoint.py -p -wSonospy=Henk,virtuals.db
+# Launch: python pycpoint.py -p -wSonospy=Henk,virtualsdatabase
 ###############################################################################
 
 import wx
@@ -46,7 +48,7 @@ list_buttonID = []
 
 class LaunchPanel(wx.Panel):
     """
-    Launch Tab for finding and launching .db files
+    Launch Tab for finding and launching databases
     """
     #----------------------------------------------------------------------
 
@@ -74,7 +76,7 @@ class LaunchPanel(wx.Panel):
         help_EnableAll = "Click here to enable or disable all the databases below."
         self.ck_EnableAll.SetToolTip(wx.ToolTip(help_EnableAll))
         self.bt_AutoPopulate = wx.Button(panel, label="Auto Populate")
-        help_AutoPopulate = "Autopopulate with up to 8 found database files."
+        help_AutoPopulate = "Autopopulate with up to 8 found databases."
         self.bt_AutoPopulate.SetToolTip(wx.ToolTip(help_AutoPopulate))
         self.bt_AutoPopulate.Bind(wx.EVT_BUTTON, self.bt_AutoPopulateClick, self.bt_AutoPopulate)
 
@@ -101,7 +103,7 @@ class LaunchPanel(wx.Panel):
     # --------------------------------------------------------------------------
     # [2-9] Checkbox, database name and proxy name field, plus browse button
     #   [2]
-        self.ck_DB1 = wx.CheckBox(self, -1, "<add .db file>")
+        self.ck_DB1 = wx.CheckBox(self, -1, "<add database>")
         self.ck_DB1.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
         
         self.tc_DB1 = wx.TextCtrl(panel)
@@ -124,9 +126,9 @@ class LaunchPanel(wx.Panel):
         self.tc_DB1.Value = guiFunctions.configMe("launch", "db1_proxyname")
 
         if self.ck_DB1.Label == "":
-            self.ck_DB1.Label = "<add .db file>"
+            self.ck_DB1.Label = "<add database>"
 
-        if self.ck_DB1.Label == "<add .db file>":
+        if self.ck_DB1.Label == "<add database>":
             self.ck_DB1.Disable()
 
         # Add items to lists
@@ -138,7 +140,7 @@ class LaunchPanel(wx.Panel):
         xIndex +=1
 
     #   [3]
-        self.ck_DB2 = wx.CheckBox(self, -1, "<add .db file>")
+        self.ck_DB2 = wx.CheckBox(self, -1, "<add database>")
         self.ck_DB2.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
 
         self.tc_DB2 = wx.TextCtrl(panel)
@@ -160,9 +162,9 @@ class LaunchPanel(wx.Panel):
         self.tc_DB2.Value = guiFunctions.configMe("launch", "db2_proxyname")
 
         if self.ck_DB2.Label == "":
-            self.ck_DB2.Label = "<add .db file>"
+            self.ck_DB2.Label = "<add database>"
 
-        if self.ck_DB2.Label == "<add .db file>":
+        if self.ck_DB2.Label == "<add database>":
             self.ck_DB2.Disable()
 
         # Add items to lists
@@ -174,7 +176,7 @@ class LaunchPanel(wx.Panel):
         xIndex +=1
 
     #   [4]
-        self.ck_DB3 = wx.CheckBox(self, -1, "<add .db file>")
+        self.ck_DB3 = wx.CheckBox(self, -1, "<add database>")
         self.ck_DB3.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
 
         self.tc_DB3 = wx.TextCtrl(panel)
@@ -196,9 +198,9 @@ class LaunchPanel(wx.Panel):
         self.tc_DB3.Value = guiFunctions.configMe("launch", "db3_proxyname")
 
         if self.ck_DB3.Label == "":
-            self.ck_DB3.Label = "<add .db file>"
+            self.ck_DB3.Label = "<add database>"
 
-        if self.ck_DB3.Label == "<add .db file>":
+        if self.ck_DB3.Label == "<add database>":
             self.ck_DB3.Disable()
 
         # Add items to lists
@@ -210,7 +212,7 @@ class LaunchPanel(wx.Panel):
         xIndex +=1
 
     #   [5]
-        self.ck_DB4 = wx.CheckBox(self, -1, "<add .db file>")
+        self.ck_DB4 = wx.CheckBox(self, -1, "<add database>")
         self.ck_DB4.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
 
         self.tc_DB4 = wx.TextCtrl(panel)
@@ -232,9 +234,9 @@ class LaunchPanel(wx.Panel):
         self.tc_DB4.Value = guiFunctions.configMe("launch", "db4_proxyname")
 
         if self.ck_DB4.Label == "":
-            self.ck_DB4.Label = "<add .db file>"
+            self.ck_DB4.Label = "<add database>"
 
-        if self.ck_DB4.Label == "<add .db file>":
+        if self.ck_DB4.Label == "<add database>":
             self.ck_DB4.Disable()
 
         # Add items to lists
@@ -246,7 +248,7 @@ class LaunchPanel(wx.Panel):
         xIndex +=1
 
     #   [6]
-        self.ck_DB5 = wx.CheckBox(self, -1, "<add .db file>")
+        self.ck_DB5 = wx.CheckBox(self, -1, "<add database>")
         self.ck_DB5.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
 
         self.tc_DB5 = wx.TextCtrl(panel)
@@ -268,9 +270,9 @@ class LaunchPanel(wx.Panel):
         self.tc_DB5.Value = guiFunctions.configMe("launch", "db5_proxyname")
 
         if self.ck_DB5.Label == "":
-            self.ck_DB5.Label = "<add .db file>"
+            self.ck_DB5.Label = "<add database>"
 
-        if self.ck_DB5.Label == "<add .db file>":
+        if self.ck_DB5.Label == "<add database>":
             self.ck_DB5.Disable()
 
         # Add items to lists
@@ -282,7 +284,7 @@ class LaunchPanel(wx.Panel):
         xIndex +=1
 
     #   [7]
-        self.ck_DB6 = wx.CheckBox(self, -1, "<add .db file>")
+        self.ck_DB6 = wx.CheckBox(self, -1, "<add database>")
         self.ck_DB6.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
 
         self.tc_DB6 = wx.TextCtrl(panel)
@@ -304,9 +306,9 @@ class LaunchPanel(wx.Panel):
         self.tc_DB6.Value = guiFunctions.configMe("launch", "db6_proxyname")
 
         if self.ck_DB6.Label == "":
-            self.ck_DB6.Label = "<add .db file>"
+            self.ck_DB6.Label = "<add database>"
 
-        if self.ck_DB6.Label == "<add .db file>":
+        if self.ck_DB6.Label == "<add database>":
             self.ck_DB6.Disable()
 
         # Add items to lists
@@ -318,7 +320,7 @@ class LaunchPanel(wx.Panel):
         xIndex +=1
 
     #   [8]
-        self.ck_DB7 = wx.CheckBox(self, -1, "<add .db file>")
+        self.ck_DB7 = wx.CheckBox(self, -1, "<add database>")
         self.ck_DB7.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
 
         self.tc_DB7 = wx.TextCtrl(panel)
@@ -340,9 +342,9 @@ class LaunchPanel(wx.Panel):
         self.tc_DB7.Value = guiFunctions.configMe("launch", "db7_proxyname")
 
         if self.ck_DB7.Label == "":
-            self.ck_DB7.Label = "<add .db file>"
+            self.ck_DB7.Label = "<add database>"
 
-        if self.ck_DB7.Label == "<add .db file>":
+        if self.ck_DB7.Label == "<add database>":
             self.ck_DB7.Disable()
 
         # Add items to lists
@@ -354,7 +356,7 @@ class LaunchPanel(wx.Panel):
         xIndex +=1
 
     #   [9]
-        self.ck_DB8 = wx.CheckBox(self, -1, "<add .db file>")
+        self.ck_DB8 = wx.CheckBox(self, -1, "<add database>")
         self.ck_DB8.SetToolTip(wx.ToolTip("Click here to enable/disable this database for launch."))
 
         self.tc_DB8 = wx.TextCtrl(panel)
@@ -376,9 +378,9 @@ class LaunchPanel(wx.Panel):
         self.tc_DB8.Value = guiFunctions.configMe("launch", "db8_proxyname")
 
         if self.ck_DB8.Label == "":
-            self.ck_DB8.Label = "<add .db file>"
+            self.ck_DB8.Label = "<add database>"
 
-        if self.ck_DB8.Label == "<add .db file>":
+        if self.ck_DB8.Label == "<add database>":
             self.ck_DB8.Disable()
 
         # Add items to lists
@@ -432,22 +434,31 @@ class LaunchPanel(wx.Panel):
         panel.SetSizer(sizer)
 
     def browseDB(self, event):
-        filters = 'Sonospy files (*.db)|*.db|All files (*.*)|*.*'
-        dialog = wx.FileDialog ( None, message = 'Select Database File...', wildcard = filters, style = wxOPEN)
+        filters = guiFunctions.configMe("general", "database_extensions")
+        wildcards = "Sonospy Database (" + filters + ")|" + filters.replace(" ", ";") + "|All files (*.*)|*.*"
+        
+        # back up to the folder below our current one.  save cwd in variable
+        owd = os.getcwd()
+        os.chdir(os.pardir)
+
+        dialog = wx.FileDialog ( None, message = 'Select database...', wildcard = wildcards, style = wxOPEN)
 
         # Open Dialog Box and get Selection
         if dialog.ShowModal() == wxID_OK:
             selected = dialog.GetFilenames()
             for selection in selected:
-                if selection.endswith('.db'):
-                    event.GetEventObject().tc.Value = selection[:-3]
+                basename, extension = os.path.splitext(selection)
+                event.GetEventObject().tc.Value = basename
                 event.GetEventObject().ck.Label = selection
                 event.GetEventObject().ck.Enable()
                 event.GetEventObject().ck.Value = True
                 guiFunctions.statusText(self, "Database: " + selection + " selected...")
         dialog.Destroy()
         self.Update()
-        
+
+        # set back to original working directory
+        os.chdir(owd)
+
     def OnCheck(self, event):
 
 # DEBUG ------------------------------------------------------------------------
@@ -465,7 +476,7 @@ class LaunchPanel(wx.Panel):
             self.ck_EnableAll.Label = "Enable All"
 
         for item in range(len(list_checkboxID)):
-            if wx.FindWindowById(list_checkboxID[item]).Label != "<add .db file>":
+            if wx.FindWindowById(list_checkboxID[item]).Label != "<add database>":
                 wx.FindWindowById(list_checkboxID[item]).Value = self.ck_EnableAll.Value
 
     def bt_LaunchClick(self, event):
@@ -553,16 +564,18 @@ class LaunchPanel(wx.Panel):
         guiFunctions.statusText(self, "Defaults saved...")
 
     def bt_AutoPopulateClick(self, event):
+        filters = guiFunctions.configMe("general", "database_extensions").split()
+
         # Set Original Working Directory so we can get back to here.
         owd = os.getcwd()
         os.chdir(os.pardir)
 
-        #   Get a count of *.db from the filesystem
-        numDB = guiFunctions.scrubDB(os.getcwd())
+        #   Get a count of *database from the filesystem
+        numDB = guiFunctions.scrubDB(os.getcwd(), filters)
         curCount = 1
         # Checkbox (enable, disable for launch)
         # textCtrl (for Proxy name in controller)
-        # database name (based on *.db)
+        # database name (based on *database)
         for db in numDB:
 
             if curCount >= 8:
@@ -592,8 +605,8 @@ class LaunchPanel(wx.Panel):
                 ck = self.ck_DB8
                 tc = self.tc_DB8
             else:
-                if db.endswith('.db'):
-                    tc.Value = db[:-3]
+                basename, extension = os.path.splitext(db)
+                tc.Value = basename
                 ck.Label = db
                 ck.Enable()
                 ck.Value = True
@@ -615,6 +628,6 @@ class LaunchPanel(wx.Panel):
     def bt_ClearClick(self, event):
         for item in range(len(list_checkboxID)):
             wxFindWindowById(list_txtctrlID[item]).Value = ""
-            wxFindWindowById(list_checkboxID[item]).Label = "<add .db file>"
+            wxFindWindowById(list_checkboxID[item]).Label = "<add database>"
             wxFindWindowById(list_checkboxID[item]).Value = False
             wxFindWindowById(list_checkboxID[item]).Disable()
