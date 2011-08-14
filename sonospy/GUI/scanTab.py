@@ -78,7 +78,7 @@ class WorkerThread(Thread):
                 wx.Yield()
         else:
             proc = subprocess.Popen([scanCMD], shell=True,stdout=subprocess.PIPE)
-
+#   This works with STDOUT, just doesn't work with windows.
             while True:
                 line = proc.stdout.readline()
                 wx.PostEvent(self._notify_window, ResultEvent(line))

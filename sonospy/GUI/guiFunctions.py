@@ -21,8 +21,7 @@
 # guiFunctions.py Author: John Chowanec <chowanec@gmail.com>
 ###############################################################################
 # TODO:
-# - Windowsify the commands to run properly -- namely pOpen and how
-#   to capture stdout?
+#
 ###############################################################################
 from wxPython.wx import *
 
