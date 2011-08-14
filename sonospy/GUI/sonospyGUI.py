@@ -23,7 +23,6 @@
 ###############################################################################
 # TODO: Kill sonsopy process on window close.
 #       Look at installers for entire sonospy project (not just GUI)
-#       Add Virtuals Tab with functionality
 ###############################################################################
 import wx
 from wxPython.wx import *
@@ -31,6 +30,7 @@ from wxPython.wx import *
 import scanTab
 import extractTab
 import launchTab
+import virtualsTab
 # import nowPlayingTab
 
 ################################################################################
@@ -46,6 +46,7 @@ class SonospyNotebook(wx.Notebook):
         self.AddPage(launchTab.LaunchPanel(self), "Launch")
         self.AddPage(scanTab.ScanPanel(self), "Scan")
         self.AddPage(extractTab.ExtractPanel(self), "Extract")
+        self.AddPage(virtualsTab.VirtualsPanel(self), "Virtuals")
 
         # Now Playing is SUPER EXPERIMENTAL, WILL PROBABLY BREAK!
 #        self.AddPage(nowPlayingTab.NowPlayingPanel(self), "Now Playing")

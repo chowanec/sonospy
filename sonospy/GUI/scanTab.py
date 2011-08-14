@@ -28,7 +28,9 @@
 #   way?
 #
 #   http://stackoverflow.com/questions/136168/get-last-n-lines-of-a-file-with-python-similar-to-tail
-#   
+#
+# - Fix the multiline window on folder adds -- gets funky.
+#
 # Windows commands:
 #   Scan: python scan.py -d virtuals.db D:\\Documents\ and\ Settings\\BMOSS\\My\ Documents\\Sonos\ Project\\Test\ database D:\\Documents\ and\ Settings\\BMOSS\\My\ Documents\\Sonos\ Project\\BMPlaylists \\\\Nas-primos01\\flac\\Afrocubism \\\\Nas-primos01\\flac\\Blind\ Faith
 #   Repair: python scan.py -d virtuals.db -r
@@ -283,7 +285,11 @@ class ScanPanel(wx.Panel):
     def bt_FoldersToScanAddClick(self, event):
         dialog = wx.DirDialog(self, "Add a Directory...", style=wx.DD_DEFAULT_STYLE)
         if dialog.ShowModal() == wx.ID_OK:
-            self.multiText.AppendText("%s" % dialog.GetPath())
+            if self.multiText.Value == "":
+                self.multiText.AppendText("%s" % dialog.GetPath())
+            else:
+                self.multiText.AppendText("\n%s" % dialog.GetPath())
+
         dialog.Destroy()
         guiFunctions.statusText(self, "Folder: " + "%s" % dialog.GetPath() + " added.")
 
