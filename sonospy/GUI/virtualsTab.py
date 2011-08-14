@@ -24,6 +24,7 @@
 # TODO:
 # - Load in an SP file
 #   How to handle multiple SPs in one File?
+# - Hook up default_music_path from ini on file dialog opens, etc.
 ###############################################################################
 
 import wx

@@ -30,6 +30,8 @@
 #        cur.execute('SELECT DISTINCT genre FROM tags')
 #        for row in cur:
 #            a.append(row)
+# - Hook up default_music_path from ini on file dialog opens, etc.
+# - Disable Save Defaults and other notebook tabs
 ###############################################################################
 
 import wx
@@ -69,7 +71,7 @@ class WorkerThread(Thread):
         if os.name == "nt":
             proc = subprocess.Popen(scanCMD.replace("\\", "\\\\"), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         else:
-            proc = subprocess.Popen([scanCMD], shell=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            proc = subprocess.Popen([scanCMD], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 
         while True:
             line = proc.stdout.readline()

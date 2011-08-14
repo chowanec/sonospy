@@ -21,8 +21,12 @@
 #
 # sonospyGUI.py Author: John Chowanec <chowanec@gmail.com>
 ###############################################################################
-# TODO: Kill sonsopy process on window close.
-#       Look at installers for entire sonospy project (not just GUI)
+# TODO:
+# - Kill sonsopy process on window close.
+# - Look at installers for entire sonospy project (not just GUI)
+# - Minimize to tray?
+# - Dynamically scale the window to fit the visible tab.
+# - Move sonospyGUI.py to the root of the Sonospy app
 ###############################################################################
 import wx
 from wxPython.wx import *

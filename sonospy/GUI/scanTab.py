@@ -23,7 +23,7 @@
 # scan.py Author: Mark Henkelis <mark.henkelis@tesco.net>
 ###############################################################################
 # TODO:
-#
+#       Hook up default_music_path from ini on file dialog opens, etc.
 ###############################################################################
 
 import wx
@@ -64,9 +64,8 @@ class WorkerThread(Thread):
         if os.name == "nt":
             proc = subprocess.Popen(scanCMD.replace("\\", "\\\\"), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         else:
-            proc = subprocess.Popen([scanCMD], shell=True,stdout=subprocess.PIPE)
+            proc = subprocess.Popen([scanCMD], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 
-        #   This works with STDOUT, just doesn't work with windows.
         while True:
             line = proc.stdout.readline()
             wx.PostEvent(self._notify_window, ResultEvent(line))
