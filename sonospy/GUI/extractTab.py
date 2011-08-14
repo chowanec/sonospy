@@ -30,8 +30,6 @@
 #        cur.execute('SELECT DISTINCT genre FROM tags')
 #        for row in cur:
 #            a.append(row)
-# - Windowsify the commands to run properly -- namely pOpen and how
-#   to capture stdout?
 ###############################################################################
 
 import wx
@@ -68,7 +66,11 @@ class WorkerThread(Thread):
 
     def run(self):
         """Run Worker Thread."""
-        proc = subprocess.Popen([scanCMD], shell=True,stdout=subprocess.PIPE)
+        if os.name == "nt":
+            proc = subprocess.Popen(scanCMD.replace("\\", "\\\\"), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        else:
+            proc = subprocess.Popen([scanCMD], shell=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
         while True:
             line = proc.stdout.readline()
             wx.PostEvent(self._notify_window, ResultEvent(line))

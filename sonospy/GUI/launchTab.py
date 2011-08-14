@@ -487,8 +487,13 @@ class LaunchPanel(wx.Panel):
 
         # Check for OS
         if os.name == 'nt':
-            cmdroot = 'python '
-            launchCMD = cmdroot + "pycpoint.py -p "
+            cmdroot = 'sonospy_'
+            launchCMD = cmdroot
+            
+            if self.rd_Proxy.Value == True:
+                launchCMD += "p "
+            else:
+                launchCMD += "w "
         else:
             cmdroot = './'
             launchCMD = cmdroot + "sonospy_"
@@ -518,7 +523,9 @@ class LaunchPanel(wx.Panel):
         if os.name != 'nt':
             proc = subprocess.Popen([launchCMD],shell=True)
         else:
-            proc = subprocess.Popen([launchCMD])
+            print launchCMD
+            print os.getcwd()
+            proc = subprocess.Popen(launchCMD, shell=True)
 
             if self.bt_Launch.Label == "Stop":
                 self.bt_Launch.Label = "Launch"

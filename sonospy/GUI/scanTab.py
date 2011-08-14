@@ -23,17 +23,7 @@
 # scan.py Author: Mark Henkelis <mark.henkelis@tesco.net>
 ###############################################################################
 # TODO:
-# - Windowsify the commands to run properly -- namely pOpen and how
-#   to capture stdout? Read from a file to see if you can "tail" in a os agnostic
-#   way?
 #
-#   http://stackoverflow.com/questions/136168/get-last-n-lines-of-a-file-with-python-similar-to-tail
-#
-# - Fix the multiline window on folder adds -- remove trailing \n.
-#
-# Windows commands:
-#   Scan: python scan.py -d virtuals.db D:\\Documents\ and\ Settings\\BMOSS\\My\ Documents\\Sonos\ Project\\Test\ database D:\\Documents\ and\ Settings\\BMOSS\\My\ Documents\\Sonos\ Project\\BMPlaylists \\\\Nas-primos01\\flac\\Afrocubism \\\\Nas-primos01\\flac\\Blind\ Faith
-#   Repair: python scan.py -d virtuals.db -r
 ###############################################################################
 
 import wx
@@ -72,18 +62,15 @@ class WorkerThread(Thread):
     def run(self):
         """Run Worker Thread."""
         if os.name == "nt":
-            proc = subprocess.Popen(scanCMD.replace("\\", "\\\\")).wait()
-            while True:
-                #Figure out how to push to the textctrl
-                wx.Yield()
+            proc = subprocess.Popen(scanCMD.replace("\\", "\\\\"), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         else:
-            proc = subprocess.Popen([scanCMD], shell=True,stdout=subprocess.PIPE)
-#   This works with STDOUT, just doesn't work with windows.
-            while True:
-                line = proc.stdout.readline()
-                wx.PostEvent(self._notify_window, ResultEvent(line))
-                wx.Yield()
-                if not line: break
+            proc = subprocess.Popen([scanCMD], shell=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+        while True:
+            line = proc.stdout.readline()
+            wx.PostEvent(self._notify_window, ResultEvent(line))
+            wx.Yield()
+            if not line: break
         proc.wait()
         wx.PostEvent(self._notify_window, ResultEvent(None))
         return
