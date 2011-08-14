@@ -1,7 +1,7 @@
 ###############################################################################
 # Virtuals Tab for use with sonospyGUI.py
 ###############################################################################
-# extractTab.py copyright (c) 2010-2011 John Chowanec
+# virtualsTab.py copyright (c) 2010-2011 John Chowanec
 # mutagen copyright (c) 2005 Joe Wreschnig, Michael Urman (mutagen is Licensed under GPL version 2.0)
 # Sonospy Project copyright (c) 2010-2011 Mark Henkelis
 #   (specifics for this file: scan.py)
@@ -295,8 +295,10 @@ class VirtualsPanel(wx.Panel):
         numLines = 0
         maxLines=(int(self.tc_FilesFolders.GetNumberOfLines()))
         while (numLines < maxLines):
-            folders += str(self.tc_FilesFolders.GetLineText(numLines)) + ", "
+            folders += str(self.tc_FilesFolders.GetLineText(numLines))
             numLines += 1
+            if numLines != maxLines:
+                folders += ", "
         guiFunctions.configWrite(section, "tracks", folders)
 
 

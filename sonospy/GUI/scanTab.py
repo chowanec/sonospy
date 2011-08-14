@@ -29,7 +29,7 @@
 #
 #   http://stackoverflow.com/questions/136168/get-last-n-lines-of-a-file-with-python-similar-to-tail
 #
-# - Fix the multiline window on folder adds -- gets funky.
+# - Fix the multiline window on folder adds -- remove trailing \n.
 #
 # Windows commands:
 #   Scan: python scan.py -d virtuals.db D:\\Documents\ and\ Settings\\BMOSS\\My\ Documents\\Sonos\ Project\\Test\ database D:\\Documents\ and\ Settings\\BMOSS\\My\ Documents\\Sonos\ Project\\BMPlaylists \\\\Nas-primos01\\flac\\Afrocubism \\\\Nas-primos01\\flac\\Blind\ Faith
@@ -394,8 +394,10 @@ class ScanPanel(wx.Panel):
         numLines = 0
         maxLines=(int(self.multiText.GetNumberOfLines()))
         while (numLines < maxLines):
-            folders += str(self.multiText.GetLineText(numLines)) + ", "
+            folders += str(self.multiText.GetLineText(numLines))
             numLines += 1
+            if numLines != maxLines:
+                folders += ", "
         guiFunctions.configWrite(section, "folder", folders)
 
         guiFunctions.statusText(self, "Defaults saved...")
