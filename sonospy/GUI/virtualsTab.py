@@ -299,7 +299,7 @@ class VirtualsPanel(wx.Panel):
             folders += str(self.tc_FilesFolders.GetLineText(numLines))
             numLines += 1
             if numLines != maxLines:
-                folders += ", "
+                folders += "|"
         guiFunctions.configWrite(section, "tracks", folders)
 
 

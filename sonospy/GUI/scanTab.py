@@ -62,10 +62,8 @@ class WorkerThread(Thread):
 
     def run(self):
         """Run Worker Thread."""
-        if os.name == "nt":
-            proc = subprocess.Popen(scanCMD.replace("\\", "\\\\"), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-        else:
-            proc = subprocess.Popen([scanCMD], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+
+        proc = subprocess.Popen(scanCMD, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 
         while True:
             line = proc.stdout.readline()
@@ -356,8 +354,11 @@ class ScanPanel(wx.Panel):
                 while (numLines < maxLines):
                     if os.name == "nt":
                         scanCMD += "\"" + str(self.multiText.GetLineText(numLines)) + "\" "
+                        scanCMD = scanCMD.replace("\\", "\\\\")
+                        scanCMD = scanCMD.replace(" ", "\ ")
                     else:
                         scanCMD += "\"" + str(self.multiText.GetLineText(numLines)).replace(" ", "\ ") + "\" "
+
                     numLines += 1
 
                 # Multithreading is below this line.
@@ -367,6 +368,7 @@ class ScanPanel(wx.Panel):
 
                 # set back to original working directory
                 os.chdir(owd)
+
 
     def bt_SaveDefaultsClick(self, event):
         section = "scan"
@@ -385,7 +387,7 @@ class ScanPanel(wx.Panel):
             folders += str(self.multiText.GetLineText(numLines))
             numLines += 1
             if numLines != maxLines:
-                folders += ", "
+                folders += "|"
         guiFunctions.configWrite(section, "folder", folders)
 
         guiFunctions.statusText(self, "Defaults saved...")

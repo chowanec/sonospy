@@ -523,9 +523,6 @@ class LaunchPanel(wx.Panel):
 # ------------------------------------------------------------------------------
         if os.name != 'nt':
             proc = subprocess.Popen([launchCMD],shell=True)
-        else:
-            proc = subprocess.Popen(launchCMD, shell=True)
-
             if self.bt_Launch.Label == "Stop":
                 self.bt_Launch.Label = "Launch"
                 self.bt_Launch.SetToolTip(wx.ToolTip("Click here to launch the Sonospy service."))
@@ -534,6 +531,8 @@ class LaunchPanel(wx.Panel):
                 self.bt_Launch.Label = "Stop"
                 self.bt_Launch.SetToolTip(wx.ToolTip("Click here to stop the Sonospy service."))
                 guiFunctions.statusText(self, "Sonospy Service Started...")
+        else:
+            proc = subprocess.Popen(launchCMD, shell=True)
 
         # set back to original working directory
         os.chdir(owd)
