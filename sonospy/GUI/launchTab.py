@@ -29,6 +29,7 @@
 #   without overwriting.
 # - Windowsify the commands to run properly -- namely pOpen and how
 #   to capture stdout?
+# - Add scratchpad?
 #
 # Windows Command:
 # Launch: python pycpoint.py -p -wSonospy=Henk,virtualsdatabase

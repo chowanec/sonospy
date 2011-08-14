@@ -353,9 +353,10 @@ class ScanPanel(wx.Panel):
                 guiFunctions.statusText(self, "Running Scan...")
                 while (numLines < maxLines):
                     if os.name == "nt":
-                        scanCMD += "\"" + str(self.multiText.GetLineText(numLines)) + "\" "
-                        scanCMD = scanCMD.replace("\\", "\\\\")
-                        scanCMD = scanCMD.replace(" ", "\ ")
+                        line = str(self.multiText.GetLineText(numLines))
+                        line = line.replace("\\", "\\\\")
+                        line = line.replace(" ", "\ ")
+                        scanCMD += "\"" + line + "\" "
                     else:
                         scanCMD += "\"" + str(self.multiText.GetLineText(numLines)).replace(" ", "\ ") + "\" "
 
