@@ -23,7 +23,8 @@
 # scan.py Author: Mark Henkelis <mark.henkelis@tesco.net>
 ###############################################################################
 # TODO:
-#       Hook up default_music_path from ini on file dialog opens, etc.
+# - Hook up default_music_path from ini on file dialog opens, etc.
+# - Disable Save Defaults and other notebook tabs
 ###############################################################################
 
 import wx
